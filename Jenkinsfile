@@ -82,7 +82,7 @@ pipeline {
             stage('Checkout Branch') {
                 steps {
                     //cleanWs()
-                    git url: 'https://github.com/vetrivelan-t-rft/WealthTools.HelloWorld.git'
+                    git clone 'https://github.com/vetrivelan-t-rft/WealthTools.HelloWorld.git'
                 }
             }
 
