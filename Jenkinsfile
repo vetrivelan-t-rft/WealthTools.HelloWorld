@@ -79,12 +79,17 @@ pipeline {
 
         stages {
 
-            stage('Checkout Branch') {
+           stage('Pre-Build') {
                 steps {
-                    //cleanWs()
-                    checkout 'GitSCM'
-                }
-            }
+                    parallel(
+                            Jenkins: {
+                                dir("${WORKSPACE}") {
+                                    git([url: "https://github.com/vetrivelan-t-rft/WealthTools.HelloWorld", credentialsId: 'vetrivelan-t-rft'])
+                                }
+                            }
+                    ) // end parallel
+                } // end steps
+            } // end Pre-Build
 
         }//end of stages
 
