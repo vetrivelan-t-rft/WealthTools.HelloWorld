@@ -82,7 +82,7 @@ pipeline {
             stage('Checkout Branch') {
                 steps {
                     //cleanWs()
-                    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '52b84f77-4e99-48cb-88d0-8e5341d935aa', url: 'https://github.com/vetrivelan-t-rft/WealthTools.HelloWorld']]])
+                    checkout 'GitSCM'
                 }
             }
 
