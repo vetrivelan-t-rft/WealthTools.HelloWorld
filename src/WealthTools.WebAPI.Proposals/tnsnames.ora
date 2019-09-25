@@ -1,0 +1,17 @@
+﻿TAAFINFS =
+ (DESCRIPTION =
+   (ADDRESS = (PROTOCOL = TCP)(HOST = wm31-scan.int.thomsonreuters.com)(PORT = 1521))
+   (CONNECT_DATA =
+     (SERVER = DEDICATED)
+     (SERVICE_NAME = tacor10d.int.thomsonreuters.com)
+   )
+ )
+
+TABETA =
+ (DESCRIPTION =
+   (ADDRESS = (PROTOCOL = TCP)(HOST = wm31-scan.int.thomsonreuters.com)(PORT = 1521))
+   (CONNECT_DATA =
+     (SERVER = DEDICATED)
+     (SERVICE_NAME = tacor11d.int.thomsonreuters.com)
+   )
+ )

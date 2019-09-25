@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WealthTools.Common.Models" Version="1.0.0.*" />
+    <PackageReference Include="WealthTools.Common.ReportEngine" Version="1.0.0.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WealthTools.Library.Broker\WealthTools.Library.BrokerManager.csproj" />
+  </ItemGroup>
+
+</Project>

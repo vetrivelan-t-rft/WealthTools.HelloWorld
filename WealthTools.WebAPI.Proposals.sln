@@ -1,0 +1,87 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{CE84BA58-04E8-43B8-81CB-BE9C19C1DC56}"
+	ProjectSection(SolutionItems) = preProject
+		Config\appsettings.json = Config\appsettings.json
+		Config\connectionstrings.json = Config\connectionstrings.json
+		Config\Nlog.config = Config\Nlog.config
+		Config\tnsnames.ora = Config\tnsnames.ora
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.WebAPI.Proposals", "src\WealthTools.WebAPI.Proposals\WealthTools.WebAPI.Proposals.csproj", "{BED32224-CB42-4A99-86BB-ADECA9669FBA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Proposals", "src\WealthTools.Library.Proposals\WealthTools.Library.Proposals.csproj", "{A50831B2-16F9-4F15-B5F5-FFEB9128E1C2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Proposals.Tests", "Test\WealthTools.Library.Proposals.Tests\WealthTools.Library.Proposals.Tests.csproj", "{D7685282-57B6-4885-A3FC-B42FAD1B7739}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Accounts", "src\WealthTools.Library.Accounts\WealthTools.Library.Accounts.csproj", "{8A92FAA2-1003-44E6-B227-A8616AEE5870}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Accounts.Tests", "Test\WealthTools.Library.Accounts.Tests\WealthTools.Library.Accounts.Tests.csproj", "{A01CB1D0-83A1-4196-9305-B4B9F9678263}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Reports", "src\WealthTools.Library.Reports\WealthTools.Library.Reports.csproj", "{68A56302-F2DA-4115-AD39-24AD1E80DEED}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.BrokerManager", "src\WealthTools.Library.Broker\WealthTools.Library.BrokerManager.csproj", "{C2C20DB0-4CB2-47AB-A7B1-9B3960E0AAA2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.BrokerManager.Tests", "Test\WealthTools.Library.BrokerManager.Tests\WealthTools.Library.BrokerManager.Tests.csproj", "{8CC8DC5F-C6F7-41EE-8A19-1C2F6C98A288}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTools.Library.Contacts.Tests", "Test\WealthTools.Library.Contacts.Tests\WealthTools.Library.Contacts.Tests.csproj", "{6DD9A80F-A1F0-4CF0-BB6F-49F5425ABE99}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTools.Library.Contacts", "src\WealthTools.Library.Contacts\WealthTools.Library.Contacts.csproj", "{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BED32224-CB42-4A99-86BB-ADECA9669FBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BED32224-CB42-4A99-86BB-ADECA9669FBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BED32224-CB42-4A99-86BB-ADECA9669FBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BED32224-CB42-4A99-86BB-ADECA9669FBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A50831B2-16F9-4F15-B5F5-FFEB9128E1C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A50831B2-16F9-4F15-B5F5-FFEB9128E1C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A50831B2-16F9-4F15-B5F5-FFEB9128E1C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A50831B2-16F9-4F15-B5F5-FFEB9128E1C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7685282-57B6-4885-A3FC-B42FAD1B7739}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7685282-57B6-4885-A3FC-B42FAD1B7739}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7685282-57B6-4885-A3FC-B42FAD1B7739}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7685282-57B6-4885-A3FC-B42FAD1B7739}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A92FAA2-1003-44E6-B227-A8616AEE5870}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A92FAA2-1003-44E6-B227-A8616AEE5870}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A92FAA2-1003-44E6-B227-A8616AEE5870}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A92FAA2-1003-44E6-B227-A8616AEE5870}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A01CB1D0-83A1-4196-9305-B4B9F9678263}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A01CB1D0-83A1-4196-9305-B4B9F9678263}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A01CB1D0-83A1-4196-9305-B4B9F9678263}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A01CB1D0-83A1-4196-9305-B4B9F9678263}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68A56302-F2DA-4115-AD39-24AD1E80DEED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68A56302-F2DA-4115-AD39-24AD1E80DEED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68A56302-F2DA-4115-AD39-24AD1E80DEED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68A56302-F2DA-4115-AD39-24AD1E80DEED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2C20DB0-4CB2-47AB-A7B1-9B3960E0AAA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2C20DB0-4CB2-47AB-A7B1-9B3960E0AAA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2C20DB0-4CB2-47AB-A7B1-9B3960E0AAA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2C20DB0-4CB2-47AB-A7B1-9B3960E0AAA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CC8DC5F-C6F7-41EE-8A19-1C2F6C98A288}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CC8DC5F-C6F7-41EE-8A19-1C2F6C98A288}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CC8DC5F-C6F7-41EE-8A19-1C2F6C98A288}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CC8DC5F-C6F7-41EE-8A19-1C2F6C98A288}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DD9A80F-A1F0-4CF0-BB6F-49F5425ABE99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DD9A80F-A1F0-4CF0-BB6F-49F5425ABE99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DD9A80F-A1F0-4CF0-BB6F-49F5425ABE99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DD9A80F-A1F0-4CF0-BB6F-49F5425ABE99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {04EC2C7C-F31D-47CF-BDB1-7308DAB5A666}
+	EndGlobalSection
+EndGlobal

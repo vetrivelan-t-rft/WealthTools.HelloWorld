@@ -1,2 +1,0 @@
-WealthTools.WebAPI.Logger.dll
-WealthTools.WebAPI.Logger.pdb

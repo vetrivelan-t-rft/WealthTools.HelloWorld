@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+ <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <IsTestProject>true</IsTestProject>
+</PropertyGroup>
+
+<ItemGroup>
+  <PackageReference Include="coverlet.msbuild" Version="2.5.1">
+    <PrivateAssets>all</PrivateAssets>
+    <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+  </PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+	<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
+	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.0" />
+	<PackageReference Include="WealthTools.Common.UnitTest.Utils" Version="1.0.0.*" />
+	<PackageReference Include="xunit" Version="2.4.1" />
+	<PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
+	<PackageReference Include="Moq" Version="4.10.1" />
+</ItemGroup>
+<ItemGroup>
+    <Content Include="..\..\Config\appsettings.json" Link="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Config\connectionstrings.json" Link="connectionstrings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\Config\Nlog.config" Link="Nlog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Config\tnsnames.ora" Link="tnsnames.ora">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+<ItemGroup>
+  <ProjectReference Include="..\..\src\WealthTools.Library.Proposals\WealthTools.Library.Proposals.csproj" />
+</ItemGroup>
+</Project>
