@@ -55,6 +55,7 @@
     <ProjectReference Include="..\WealthTools.Library.Accounts\WealthTools.Library.Accounts.csproj" />
     <ProjectReference Include="..\WealthTools.Library.Broker\WealthTools.Library.BrokerManager.csproj" />
     <ProjectReference Include="..\WealthTools.Library.Contacts\WealthTools.Library.Contacts.csproj" />
+    <ProjectReference Include="..\WealthTools.Library.Finder\WealthTools.Library.Search.csproj" />
     <ProjectReference Include="..\WealthTools.Library.Proposals\WealthTools.Library.Proposals.csproj" />
     <ProjectReference Include="..\WealthTools.Library.Reports\WealthTools.Library.Reports.csproj" />
   </ItemGroup>
@@ -65,6 +66,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

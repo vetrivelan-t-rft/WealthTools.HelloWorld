@@ -10,11 +10,11 @@ namespace WealthTools.Library.Accounts.Handlers
         public static double CalculateBalance(AccountPosition accountPos)
         {
             double dBalance = 0.0;
-            if (accountPos.Is_cash_balance_preset)
-                dBalance = accountPos.Preset_cash_balance;
+            if (accountPos.IsCashBalancePreset)
+                dBalance = accountPos.PresetCashBalance;
             else
             {
-                dBalance = accountPos.Cash_component;
+                dBalance = accountPos.CashComponent;
                 // get the list of open positions, find the balance
                 foreach (PositionBase post in accountPos.Positions)
                 {
@@ -22,20 +22,20 @@ namespace WealthTools.Library.Accounts.Handlers
                     double dQuantity = post.Qty;
                     double dFactor = 1.0;
         
-                    if (post.Position_term == PositionBase.tPositionTerm.SHORT)
-                        dFactor = post.Market_value >= 0 ? -1.0 : 1.0;
+                    if (post.PositionTerm == PositionTerm.SHORT)
+                        dFactor = post.MarketValue >= 0 ? -1.0 : 1.0;
         
                     // quantity is stored, use this instead of market value
                     if (post.Is_market_value_preset)
                     {
-                        dBalance += dFactor * (post.Market_value * post.Security_Detail.Currency_Conv_Factor);
+                        dBalance += dFactor * (post.MarketValue * post.SecurityDetail.CurrencyConvFactor);
                     }
                     else
                     {
-                        post.Market_value = post.Qty * post.Current_priceDB * post.Security_Detail.Price_factor;
+                        post.MarketValue = post.Qty * post.CurrentPriceDB * post.SecurityDetail.PriceFactor;
                         if (post.CurrentFactor != 0.0)
-                            post.Market_value *= post.CurrentFactor;
-                        dBalance += dFactor * post.Market_value;
+                            post.MarketValue *= post.CurrentFactor;
+                        dBalance += dFactor * post.MarketValue;
                         post.Is_market_value_preset = true;
                     }
                 }
@@ -46,26 +46,26 @@ namespace WealthTools.Library.Accounts.Handlers
         public static double CalculateLongBalance(AccountPosition accountPos)
         {
             double dBalance = 0.0;
-            if (accountPos.Is_cash_balance_preset)
-                dBalance = accountPos.Long_balance;
+            if (accountPos.IsCashBalancePreset)
+                dBalance = accountPos.LongBalance;
             else
             {
-                //dBalance = accountPos.Long_balance;
+                //dBalance = accountPos.LongBalance;
                 // get the list of open positions, find the balance
                 foreach (PositionBase post in accountPos.Positions)
                 {
-                    if (post.Position_term == PositionBase.tPositionTerm.SHORT)
+                    if (post.PositionTerm == PositionTerm.SHORT)
                         continue;
 
                     // check for either market price and quantity or amount
                     double dQuantity = post.Qty;
                     // quantity is stored, use this instead of market value
                     if (post.Is_market_value_preset)
-                        dBalance += (post.Market_value);
+                        dBalance += (post.MarketValue);
                     else
                     {
-                        post.Market_value = post.Qty * post.Current_priceDB * post.Security_Detail.Price_factor;
-                        dBalance += post.Market_value;
+                        post.MarketValue = post.Qty * post.CurrentPriceDB * post.SecurityDetail.PriceFactor;
+                        dBalance += post.MarketValue;
                         post.Is_market_value_preset = true;
                     }
                 }
@@ -76,25 +76,25 @@ namespace WealthTools.Library.Accounts.Handlers
         public static double CalculateShortBalance(AccountPosition accountPos)
         {
             double dBalance = 0.0;
-            if (accountPos.Is_cash_balance_preset)
-                dBalance = accountPos.Short_balance;
+            if (accountPos.IsCashBalancePreset)
+                dBalance = accountPos.ShortBalance;
             else
             {
                 // get the list of open positions, find the balance
                 foreach (PositionBase post in accountPos.Positions)
                 {
-                    if (post.Position_term == PositionBase.tPositionTerm.LONG)
+                    if (post.PositionTerm == PositionTerm.LONG)
                         continue;
         
                     // check for either market price and quantity or amount
                     double dQuantity = post.Qty;
                     // quantity is stored, use this instead of market value
                     if (post.Is_market_value_preset)
-                        dBalance += (post.Market_value);
+                        dBalance += (post.MarketValue);
                     else
                     {
-                        post.Market_value = post.Qty * post.Current_priceDB * post.Security_Detail.Price_factor;
-                        dBalance += post.Market_value;
+                        post.MarketValue = post.Qty * post.CurrentPriceDB * post.SecurityDetail.PriceFactor;
+                        dBalance += post.MarketValue;
                         post.Is_market_value_preset = true;
                     }
                 }
@@ -106,11 +106,11 @@ namespace WealthTools.Library.Accounts.Handlers
     {
         double dBalance = 0.0;
     
-        if (accountPos.Is_cash_balance_preset)
-            dBalance = accountPos.Preset_cash_balance;
+        if (accountPos.IsCashBalancePreset)
+            dBalance = accountPos.PresetCashBalance;
         else
         {
-            dBalance = accountPos.Cash_component;
+            dBalance = accountPos.CashComponent;
     
             // get the list of open positions, find the balance
             foreach (PositionBase post in accountPos.Positions)
@@ -119,18 +119,18 @@ namespace WealthTools.Library.Accounts.Handlers
                 double dQuantity = post.Qty;
                 double dFactor = 1.0;
     
-                if (post.Position_term == PositionBase.tPositionTerm.SHORT)
-                    dFactor = post.Market_value >= 0 ? -1.0 : 1.0;
+                if (post.PositionTerm == PositionTerm.SHORT)
+                    dFactor = post.MarketValue >= 0 ? -1.0 : 1.0;
     
                 // quantity is stored, use this instead of market value
                 if (post.Is_market_value_preset)
                 {
-                    dBalance += dFactor * (post.Market_value * post.Security_Detail.Currency_Conv_Factor);
+                    dBalance += dFactor * (post.MarketValue * post.SecurityDetail.CurrencyConvFactor);
                 }
                 else
                 {
-                    post.Market_value = post.Qty * post.Current_priceDB * post.Security_Detail.Price_ADJ_factor;
-                    dBalance += dFactor * (post.Market_value * post.Security_Detail.Currency_Conv_Factor);
+                    post.MarketValue = post.Qty * post.CurrentPriceDB * post.SecurityDetail.Price_ADJ_factor;
+                    dBalance += dFactor * (post.MarketValue * post.SecurityDetail.CurrencyConvFactor);
                     post.Is_market_value_preset = true;
                 }
             }
@@ -143,16 +143,16 @@ namespace WealthTools.Library.Accounts.Handlers
     {
         double dBalance = 0.0;
     
-        if (accountPos.Is_cash_balance_preset)
-            dBalance = accountPos.Long_balance;
+        if (accountPos.IsCashBalancePreset)
+            dBalance = accountPos.LongBalance;
         else
         {
-            //dBalance = accountPos.Long_balance;
+            //dBalance = accountPos.LongBalance;
     
             // get the list of open positions, find the balance
             foreach (PositionBase post in accountPos.Positions)
             {
-                if (post.Position_term == PositionBase.tPositionTerm.SHORT)
+                if (post.PositionTerm == PositionTerm.SHORT)
                     continue;
     
                 // check for either market price and quantity or amount
@@ -160,11 +160,11 @@ namespace WealthTools.Library.Accounts.Handlers
     
                 // quantity is stored, use this instead of market value
                 if (post.Is_market_value_preset)
-                    dBalance += (post.Market_value);
+                    dBalance += (post.MarketValue);
                 else
                 {
-                    post.Market_value = post.Qty * post.Current_priceDB * post.Security_Detail.Price_ADJ_factor;
-                    dBalance += post.Market_value;
+                    post.MarketValue = post.Qty * post.CurrentPriceDB * post.SecurityDetail.Price_ADJ_factor;
+                    dBalance += post.MarketValue;
                     post.Is_market_value_preset = true;
                 }
             }
@@ -183,8 +183,8 @@ namespace WealthTools.Library.Accounts.Handlers
                 // get the list of open positions, find the balance
                 foreach (PositionBase post in accountPos.Positions)
                 {
-                    if (lastDate.CompareTo(post.Pricing_date) < 0)
-                        lastDate = post.Pricing_date;
+                    if (lastDate.CompareTo(post.PricingDate) < 0)
+                        lastDate = post.PricingDate;
                 }
 
                 return lastDate;

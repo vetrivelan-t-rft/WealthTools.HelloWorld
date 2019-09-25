@@ -101,7 +101,129 @@ namespace WealthTools.Library.BrokerManager.Repositories
 
         }
 
+        public bool IsBackOfficeInstitution()
+        {
+            int configId = Convert.ToInt32(_dbWrapper.ExecuteScalar(cmd =>
+            {
+                cmd.CommandText = SqlConstants.GET_INSTITUTION_CONFIG;
+                DatabaseWrapperHelper.AddInIntParameter(cmd, "InstitutionId", _context.Identity.InstitutionId);
+            }, _context.Identity.InstitutionId));
+            return configId == Constants.IDS_BACKOFFICE_CONFIG_ID;
+        }
 
-      
+        private void GetACViewSetIds( ref int origAcViewId, ref int mappedAcViewId)
+        {            
+            IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
+            {
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandText = SqlConstants.GET_AC_VIEW_ID;
+                DatabaseWrapperHelper.AddInIntParameter(cmd, "group_id", _context.Identity.GroupId);
+            }, _context.Identity.InstitutionId);
+            foreach (var row in records)
+            {
+                if (row["most_gran_yn"].ToString().ToUpper() == "Y")
+                    origAcViewId = int.Parse(row["ac_view_id"].ToString());
+                else
+                    mappedAcViewId = int.Parse(row["ac_view_id"].ToString());
+            }
+            
+            if (mappedAcViewId == 0)
+                mappedAcViewId = origAcViewId;
+        }
+
+        public List<AssetClass> GetAssetClassification(bool broadAssetClass)
+        {
+            string query = @"SELECT x.asset_class_id,a.name,a.descr,a.red,a.green,
+                                                  a.blue,a.abbreviation,NVL(a.perf_descr, a.descr) AS perf_descr,
+                                                  parent_ac AS broad_asset_class_id,a.idxid,WIXM.Name as Index_Name,
+                                                  wcxac.asset_class_universe_id, NULL AS asset_class_type, nvl(wcxac.seq_num, 0) as seq_num ,acs.sec_id 
+                                           FROM
+                                              (SELECT ac.asset_class_id,
+                                                NVL(
+                                                (SELECT asset_class_id_2
+                                                   FROM web_asset_class_relationship
+                                                  WHERE asset_class_id_2 IN
+                                                  (SELECT asset_class_id FROM web_ac_view_asset_class WHERE ac_view_id = :a_mappedACViewId
+                                                  ) START
+                                                WITH asset_class_id_1= ac.asset_class_id CONNECT BY asset_class_id_1= prior asset_class_id_2
+                                                ),
+                                                (SELECT asset_class_id
+                                                   FROM web_ac_view_asset_class
+                                                  WHERE ac_view_id = :a_mappedACViewId
+                                                AND asset_class_id = ac.asset_class_id
+                                                )) parent_ac
+                                                 FROM web_ac_view_asset_class ac
+                                                WHERE ac_view_id = :a_origACViewId
+                                              ) x              ,
+                                              web_asset_class a,
+                                              web_asset_class b,
+                                              web_ix_master WIXM,
+                                              web_classification_x_ac wcxac,
+                                              ac_security acs
+                                          WHERE x.asset_class_id=a.asset_class_id
+                                            AND x.parent_ac         = b.asset_class_id (+)
+                                            and wcxac.asset_class_id = x.asset_class_id
+                                            and acs.asset_class_id =x.asset_class_id
+                                            and WIXM.IDXID(+)=a.IDXID order by a.name asc";
+            string broadACquery = @"select wac.asset_class_id, wac.NAME, wac.descr, wac.red, wac.green, wac.blue,
+                                                         wac.abbreviation, NVL(wac.perf_descr, wac.descr) AS perf_descr, wac.broad_asset_class_id,
+                                                         wac.idxid, WIXM.Name as Index_Name, acs.sec_id,
+                                                         wcxac.asset_class_universe_id, wcxac.asset_class_type, nvl(wcxac.seq_num, 0) as seq_num 
+                                                  from  web_asset_class wac,web_ac_view_asset_class acx,web_ix_master wixm,web_classification_x_ac wcxac ,
+                                              ac_security acs
+                                                  where wac.asset_class_id = acx.asset_class_id     
+                                                        and WIXM.IDXID(+)=WAC.IDXID 
+                                                        and acx.ac_view_id=:a_mappedACViewId   
+                                                        and wcxac.asset_class_id (+)= wac.asset_class_id  
+                                                        and acs.asset_class_id =x.asset_class_id
+                                                        order by wac.asset_class_id";
+
+            //if (_context.Identity.InstitutionId < 0)
+            //institutionId = 6018;
+            List<AssetClass> acClassList = new List<AssetClass>();
+            int origACViewId = 0;
+            int mappedACViewID = 0;
+
+            GetACViewSetIds( ref origACViewId, ref mappedACViewID);
+            IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
+            {
+                if (broadAssetClass == true)
+                {
+                    cmd.CommandText = broadACquery;
+                    DatabaseWrapperHelper.AddInIntParameter(cmd, "a_mappedACViewId", mappedACViewID.ToString());
+                }
+                else
+                {
+                    cmd.CommandText = query;
+                    DatabaseWrapperHelper.AddInIntParameter(cmd, "a_origACViewId", origACViewId.ToString());
+                    DatabaseWrapperHelper.AddInIntParameter(cmd, "a_mappedACViewId", mappedACViewID.ToString());
+                }
+            }, _context.Identity.InstitutionId);
+            foreach (var row in records)
+            {
+                AssetClass assetClass = new AssetClass();
+                assetClass.Acid = Convert.ToInt64(row["asset_class_id"]);
+                assetClass.Red = Convert.ToInt64(row["red"]);
+                assetClass.Green = Convert.ToInt64(row["green"]);
+                assetClass.Blue = Convert.ToInt64(row["blue"]);
+                assetClass.Idxid = Convert.ToInt64(row["idxid"]);
+                assetClass.BroadACId = Convert.ToInt64(row["broad_asset_class_id"]);
+                assetClass.SortOrder = Convert.ToInt64(row["seq_num"]);
+                assetClass.Name = row["NAME"].ToString();
+                assetClass.Descr = row["descr"].ToString();
+                assetClass.Abbreviation = row["abbreviation"].ToString();
+                assetClass.PerfDescr = row["perf_descr"].ToString();
+                assetClass.IndexName = row["Index_Name"].ToString();
+                assetClass.AssetType =row["asset_class_type"].ToString();
+                assetClass.SecId = row["sec_id"].ToString();
+                acClassList.Add(assetClass);
+            }
+
+            return acClassList;
+        }
+
+
+
+
     }
 }

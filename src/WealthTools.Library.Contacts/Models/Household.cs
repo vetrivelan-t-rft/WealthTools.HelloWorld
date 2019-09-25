@@ -2,7 +2,7 @@
 
 namespace WealthTools.Library.Contacts.Models
 {
-   public class SearchResult
+   public class Household
     {      
         public string HouseholdID {get; set;}       
         public string Type {get; set;}
@@ -32,6 +32,11 @@ namespace WealthTools.Library.Contacts.Models
         public string Short_name { get; set; }
     }
 
-   
+    //For Soap UI purpose
+   public class ContactList
+    {
+        public List<Contact> list = new List<Contact>();
+
+    }
  
 }

@@ -6,10 +6,14 @@ namespace WealthTools.Library.Contacts.Interfaces
 {
     public interface IContactsRepository
     {
-        List<SearchResult> SearchAllContacts(SearchParameters searchParameters);
+        List<Household> SearchAllContacts(SearchParameters searchParameters);
 
         List<Contact> GetContactsForHousehold(string householdId);
 
-        SearchResult CreateProspectHousehold(List<Contact> contactsListColl);
+        Household CreateProspectHousehold(List<Contact> contactsListColl);
+        List<Team> GetHouseHoldTeams(string householdId);
+        bool CreateContact(Contact newCt, long householdId);
+        bool UpdateContact(Contact contact);
+
     }
 }

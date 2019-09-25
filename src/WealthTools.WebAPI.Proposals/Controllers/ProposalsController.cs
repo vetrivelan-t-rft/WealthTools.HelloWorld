@@ -2,11 +2,14 @@
 using System;
 using WealthTools.Common.Models.Interfaces;
 using WealthTools.Library.Proposals.Interfaces;
+using WealthTools.Library.Proposals.Models;
+using WealthTools.Common.Utils;
 
 namespace WealthTools.WebAPI.Proposals.Controllers
 {
     [ApiVersion("1.0")]
     [Route("api/v1/Proposals")]
+    //ServiceFilter(typeof(ProtectXFilter))]
     public class ProposalsController : Controller
     {
         IProposalsRepository _proposalsRepository;
@@ -33,12 +36,15 @@ namespace WealthTools.WebAPI.Proposals.Controllers
         }
 
         ///<summary>API to delete an existing proposal</summary>
-        ///<param name="id">Id of the proposal to be deleted</param>
-        [HttpDelete, Route("{id:int}")]        
+        ///<param name="planid">Id of the proposal to be deleted</param>
+        [HttpDelete, Route("{planid}")]
         [MapToApiVersion("1.0")]
-        public IActionResult DeleteInvestmentPlan(int id)
-        {
-            return Ok(_proposalsRepository.Delete_Web_Investment_Plan(id));
+        [UnProtectParams(new string[] {"planid"})]       
+        public IActionResult DeleteInvestmentPlan(string planid)
+        {           
+            int  intPlanid = 0;
+            int.TryParse(planid, out intPlanid);
+             return Ok(_proposalsRepository.Delete_Web_Investment_Plan(intPlanid));           
         }
 
         ///<summary>API to create a new proposal</summary>
@@ -49,6 +55,14 @@ namespace WealthTools.WebAPI.Proposals.Controllers
         public IActionResult Create(string houseHoldID, string proposalName)
         {
             return Ok(_proposalsRepository.CreateNewProposal(houseHoldID,proposalName));
+        }
+
+        [HttpPost("Search")]
+        [MapToApiVersion("1.0")]
+        public IActionResult SearchProposals([FromBody] ProposalSearchParameters SearchParameters)
+        {
+            return SearchParameters == null ? BadRequest()
+                : (IActionResult)Ok(_proposalsRepository.SearchProposals(SearchParameters));
         }
 
     }

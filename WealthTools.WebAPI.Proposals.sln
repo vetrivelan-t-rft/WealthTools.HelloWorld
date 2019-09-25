@@ -27,9 +27,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.BrokerM
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.BrokerManager.Tests", "Test\WealthTools.Library.BrokerManager.Tests\WealthTools.Library.BrokerManager.Tests.csproj", "{8CC8DC5F-C6F7-41EE-8A19-1C2F6C98A288}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTools.Library.Contacts.Tests", "Test\WealthTools.Library.Contacts.Tests\WealthTools.Library.Contacts.Tests.csproj", "{6DD9A80F-A1F0-4CF0-BB6F-49F5425ABE99}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Contacts.Tests", "Test\WealthTools.Library.Contacts.Tests\WealthTools.Library.Contacts.Tests.csproj", "{6DD9A80F-A1F0-4CF0-BB6F-49F5425ABE99}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTools.Library.Contacts", "src\WealthTools.Library.Contacts\WealthTools.Library.Contacts.csproj", "{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Contacts", "src\WealthTools.Library.Contacts\WealthTools.Library.Contacts.csproj", "{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Search", "src\WealthTools.Library.Finder\WealthTools.Library.Search.csproj", "{E5945A1E-5708-4FC4-8F0F-3FB1639E0FDE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Search.Tests", "test\WealthTools.Library.Finder.Tests\WealthTools.Library.Search.Tests.csproj", "{669ABAF5-55DD-4AB4-98BE-E47E471973A3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WealthTools.Library.Reports.Tests", "Test\WealthTools.Library.Reports.Tests\WealthTools.Library.Reports.Tests.csproj", "{C2B83B08-D04E-49B0-95AF-8CC8BB64F553}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,6 +83,18 @@ Global
 		{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AAB20ED7-57A4-44DC-BA89-73652DCEA32D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5945A1E-5708-4FC4-8F0F-3FB1639E0FDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5945A1E-5708-4FC4-8F0F-3FB1639E0FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5945A1E-5708-4FC4-8F0F-3FB1639E0FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5945A1E-5708-4FC4-8F0F-3FB1639E0FDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{669ABAF5-55DD-4AB4-98BE-E47E471973A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{669ABAF5-55DD-4AB4-98BE-E47E471973A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{669ABAF5-55DD-4AB4-98BE-E47E471973A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{669ABAF5-55DD-4AB4-98BE-E47E471973A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2B83B08-D04E-49B0-95AF-8CC8BB64F553}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2B83B08-D04E-49B0-95AF-8CC8BB64F553}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2B83B08-D04E-49B0-95AF-8CC8BB64F553}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2B83B08-D04E-49B0-95AF-8CC8BB64F553}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

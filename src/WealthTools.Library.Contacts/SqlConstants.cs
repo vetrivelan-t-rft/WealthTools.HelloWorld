@@ -68,6 +68,82 @@ namespace WealthTools.Library.Contacts
 		                      :MAIL_ADDR1,:MAIL_ADDR2, :MAIL_CITY, :MAIL_STATE, :MAIL_POSTAL_CODE, :MAIL_COUNTRY)";
         public const string CREATE_HOUSEHOLD_MEMBER = "INSERT INTO WEB_HOUSEHOLD_MEMBER (HOUSEHOLD_ID, INVESTOR_ID, RELATIONSHIP_TYPE_ID,DEFAULT_ACCOUNT_ID) VALUES(:HOUSEHOLD_ID, :INVESTOR_ID, :RELATIONSHIP_TYPE_ID, :DEFAULT_ACCOUNT_ID)";
 
+        public const string CREATE_WEB_HOUSEHOLD_QRY_FILTER = @"insert into web_household_qry_filter(household_id, filter_token, user_entered_yn)(select wth.household_Id, wt.team_id, decode(wth.team_assign_type_id, 3, 'Y', 'N') from web_team_x_household wth, web_team wt where wth.team_id = wt.team_id and wt.team_hierarchy_type_id = 3 and wth.household_id = :householdId)";
+        public const string DELETE_WEB_HOUSEHOLD_QRY_FILTER = @"DELETE FROM WEB_HOUSEHOLD_QRY_FILTER WHERE HOUSEHOLD_ID = :householdId";
+
+        public const string GET_INSTITUTION_CONFIG = @"select VALUE from  web_inst_setting 
+                                                       where INSTITUTION_ID =:InstitutionId and INST_SETTING_TYPE_ID = 1";
+
+        public const string GET_HOUSEHOLD_TEAMS = @"SELECT distinct
+                              wtxb.household_id,
+                              wt.team_id,
+                              wt.name,
+                              wt.team_hierarchy_type_id,
+                              wt.search_key as rep_code,
+                              wtxb.team_assign_type_id,
+                              wtxb.team_role_id as team_role_id
+                            FROM
+                              web_team wt,
+                              web_team_x_household wtxb
+                            WHERE
+                              wtxb.team_id = wt.team_id AND
+                              wt.TEAM_HIERARCHY_TYPE_ID = :hierarchyType AND
+                              wt.mark_deleted_yn='N' AND
+                              wtxb.household_id= :household_id order by UPPER(wt.name)";
+
+        public const string GET_DEFAULT_TEAMS = @"SELECT
+	                        teamshare.broker_id,
+	                        teams.team_id,
+	                        teams.name,
+	                        teams.search_key AS rep_code,
+	                        teamshare.team_role_id,
+	                        NULL AS team_assigntype_id,
+	                        teams.team_hierarchy_type_id
+                        FROM
+	                        web_broker_x_teamshare teamshare
+	                        JOIN web_team teams ON teamshare.team_id = teams.team_id
+                        WHERE teamshare.broker_id = :brokerId
+	                        AND teams.mark_deleted_yn = 'N'
+	                        AND teams.team_hierarchy_type_id IN (3, 5, 6)
+	                        AND EXISTS (
+		                        SELECT
+			                        1
+		                        FROM
+			                        web_broker_x_team bxt
+		                        WHERE
+			                        bxt.broker_id = teamshare.broker_id
+			                        AND bxt.team_id IN (
+				                        SELECT
+					                        team_id
+				                        FROM
+					                        web_team
+				                        WHERE
+					                        mark_deleted_yn = 'N'
+				                        CONNECT BY PRIOR parent_team_id = team_id
+					                        START WITH team_id = teamshare.team_id
+			                        )
+	                        )
+                        ORDER BY
+	                        UPPER(teams.name)";
+
+        public const string DELETE_TeamEntitlement = @"DELETE FROM WEB_TEAM_X_HOUSEHOLD WHERE HOUSEHOLD_ID = :householdId ";
+        public const string CREATE_TEAM_ENTITLEMENT_ASSIGNTYPE_0 = @"INSERT INTO WEB_TEAM_X_HOUSEHOLD (TEAM_ID, HOUSEHOLD_ID) VALUES(:teamId,:householdId)";
+        public const string CREATE_TEAM_ENTITLEMENT = @"INSERT INTO WEB_TEAM_X_HOUSEHOLD (TEAM_ID, HOUSEHOLD_ID, TEAM_ROLE_ID, TEAM_ASSIGN_TYPE_ID) VALUES(:teamId, :householdId, :teamRole, :teamAssignmentType)";
+        public const string GET_HOUSEHOLD_TeamEntitlement = @"SELECT * FROM WEB_TEAM_X_HOUSEHOLD WHERE HOUSEHOLD_ID = :householdId";
+        public const string GET_Parent_Teams = @"SELECT web_team.team_id as TEAM_ID,web_team.SEARCH_KEY as REP_CODE,web_team.NAME,web_team.TEAM_HIERARCHY_TYPE_ID, 2 as TEAM_ROLE_ID,  1 as TEAM_ASSIGN_TYPE_ID
+                                from web_team where team_id in (
+                                    SELECT DISTINCT web_team.parent_team_id   
+                                           FROM web_team
+                                          WHERE web_team.parent_team_id IS NOT NULL
+                                     CONNECT BY web_team.team_id = PRIOR web_team.parent_team_id
+                                     START WITH web_team.team_id IN (:TEAM_IDS )) AND web_team.mark_deleted_yn='N' ";
+
+        public const string UPDATE_CONTACT = @"UPDATE WEB_INVESTOR 
+                            SET FIRST_NAME = :FIRST_NAME, MID_INITIAL = :MID_INITIAL, LAST_NAME = :LAST_NAME, EMAIL_ADDR = :EMAIL_ADDR, HOME_ADDR1 = :HOME_ADDR1, HOME_ADDR2 = :HOME_ADDR2, HOME_CITY = :HOME_CITY, HOME_STATE = :HOME_STATE, HOME_POSTAL_CODE = :HOME_POSTAL_CODE
+                            WHERE INVESTOR_ID = :INVESTOR_ID";
+
     }
+
+
 
 }

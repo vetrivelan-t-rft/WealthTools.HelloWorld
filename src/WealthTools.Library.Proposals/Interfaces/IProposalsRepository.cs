@@ -12,5 +12,7 @@ namespace WealthTools.Library.Proposals.Interfaces
         bool Delete_Web_Investment_Plan(int PlanID);
 
         long CreateNewProposal(string houseHoldID, string proposalName);
+        List<ProposalsModel> SearchProposals(ProposalSearchParameters searchParameters);
+        List<ProfileModelInfo> GetProfileModelData(List<string> planIds);
     }
 }

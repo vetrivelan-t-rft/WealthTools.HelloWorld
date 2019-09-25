@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using WealthTools.Library.Contacts;
@@ -12,14 +13,17 @@ namespace WealthTools.Library.Contacts.Models
         public string FirstName { get; set; } = "";
         public string City { get; set; } = "";
         public string State { get; set; } = "";
+        [JsonIgnore]
         public string Zip { get; set; } = "";
         public string AccountNumber { get; set; } = "";
         public string RepCode { get; set; } = "";
 
-        //need to check
+        [JsonIgnore]
         public string StartRow { get;} = Constants.IDS_START_ROW;
-        public string Count { get; } = Constants.IDS_COUNT;
+        public long Count { get; set; } = Constants.IDS_COUNT;
+        [JsonIgnore]
         public string SortByColumn { get; set; } = "";
+        [JsonIgnore]
         public bool IsSortAsc { get; set; } = true;
        
     }

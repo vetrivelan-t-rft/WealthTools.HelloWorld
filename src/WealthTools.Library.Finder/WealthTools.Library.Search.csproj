@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WealthTools.Common.DatabaseWrapper" Version="1.0.0.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WealthTools.Library.Contacts\WealthTools.Library.Contacts.csproj" />
+    <ProjectReference Include="..\WealthTools.Library.Proposals\WealthTools.Library.Proposals.csproj" />
+  </ItemGroup>
+
+</Project>

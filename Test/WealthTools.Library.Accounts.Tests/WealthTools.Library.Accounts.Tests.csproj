@@ -38,6 +38,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\WealthTools.Library.Accounts\WealthTools.Library.Accounts.csproj" />
+    <ProjectReference Include="..\..\src\WealthTools.Library.Broker\WealthTools.Library.BrokerManager.csproj" />
   </ItemGroup>
 
 </Project>

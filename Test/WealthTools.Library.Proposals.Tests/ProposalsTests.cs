@@ -84,5 +84,49 @@ namespace WealthTools.Library.Proposals.Tests
             Assert.True(proposalId > 0);
         }
 
+        [Theory]
+        [MemberData(nameof(TestObjectGenerator.GetDemographicTestData), MemberType = typeof(TestObjectGenerator))]
+        public void SearchProposalsByDemographics(ProposalSearchParameters param)
+        {
+            List<ProposalsModel> res = _proposalsRepository.SearchProposals(param);
+            Assert.True(res.Count > 0);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestObjectGenerator.GetAcctSearchTestData), MemberType = typeof(TestObjectGenerator))]
+        public void SearchProposalsByAcctNo(ProposalSearchParameters param)
+        {
+            List<ProposalsModel> res = _proposalsRepository.SearchProposals(param);
+            Assert.True(res.Count > 0);
+        }
+
     }
-}
+    public class TestObjectGenerator
+    {
+        public static IEnumerable<object[]> GetDemographicTestData()
+        {
+
+
+            yield return new object[]
+            {
+            new ProposalSearchParameters {
+                LastName = "smith"
+                 }
+            };
+
+        }
+
+        public static IEnumerable<object[]> GetAcctSearchTestData()
+        {
+
+
+            yield return new object[]
+            {
+            new ProposalSearchParameters {
+                Searchby=SearchBy.ACCOUNTNUMBER,
+                AccountNumber = "1"
+                 }
+            };
+        }
+    }
+    }

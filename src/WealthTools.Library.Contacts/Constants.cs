@@ -7,7 +7,8 @@ namespace WealthTools.Library.Contacts
         public const bool IDS_IS_TOTAL_COUNT_ONLY = false;
         public const bool IDS_SUPP_ACCT = false;
         public const string IDS_START_ROW = "1";
-        public const string IDS_COUNT = "50";
+        public const long IDS_COUNT = 50;
+        public const int IDS_BACKOFFICE_CONFIG_ID = 2;
     }
 
     public enum RelationShipType

@@ -102,5 +102,18 @@ sysdate, 0)";
         public const string GET_INVESTOR_ID = @"select * from web_investor where INVESTOR_ID in (
                                                 select INVESTOR_ID from  WEB_HOUSEHOLD_MEMBER where household_id = :HOUSEHOLD_ID 
                                                 AND RELATIONSHIP_TYPE_ID = 1)";
+        public const string GET_PROFILE_MODEL_INFO = @"SELECT DISTINCT invplan.plan_id,
+                                                          invplan.profile_id,
+                                                          invprofile.name AS profile_name,
+                                                          invplan.model_id,
+                                                          wpp.Name as modelName
+                                                        FROM web_investment_plan invplan,
+                                                           web_investor_profile_detail wipd,
+                                                           web_investor_profile invprofile,
+                                                           web_portfolio_product wpp
+                                                        where wipd.profile_dtl_id = invplan.profile_id
+                                                           AND  wipd.profile_id(+) = invprofile.profile_id
+                                                           and wpp.portfolio_id(+) = invplan.model_id
+                                                           AND invplan.plan_id in (:PLAN_IDS)";
     }
 }

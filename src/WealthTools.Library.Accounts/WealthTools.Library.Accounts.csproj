@@ -10,4 +10,8 @@
     <PackageReference Include="WealthTools.Common.Utils" Version="1.0.0.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\WealthTools.Library.Broker\WealthTools.Library.BrokerManager.csproj" />
+  </ItemGroup>
+
 </Project>

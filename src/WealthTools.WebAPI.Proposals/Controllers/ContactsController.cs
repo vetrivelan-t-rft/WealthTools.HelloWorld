@@ -34,39 +34,72 @@ namespace WealthTools.WebAPI.Proposals.Controllers
         [MapToApiVersion("1.0")]
         public IActionResult SearchContacts([FromBody] SearchParameters SearchParameters)
         {
-            return SearchParameters == null ? BadRequest() 
+            return SearchParameters == null || (SearchParameters.Searchby == Library.Contacts.SearchBy.DEMOGRAPHICS && String.IsNullOrWhiteSpace(SearchParameters.LastName) )? BadRequest() 
                 : (IActionResult)Ok(_contactsRepository.SearchAllContacts(SearchParameters));
         }
         /// <summary>
         /// returns the contact information for a given householdid
         /// </summary>
-        /// <param name="houseHoldID"></param>
+        /// <param name="houseHoldID">Id of the household</param>
         /// <returns></returns>
-        [HttpGet("{houseHoldId}")]
+        [HttpGet("{houseHoldID}")]
         [MapToApiVersion("1.0")]
         public IActionResult GetHouseholdContacts(string houseHoldID)
         {
             bool isValidHH = long.TryParse(houseHoldID, out long householdID);
             if (!isValidHH) return BadRequest();
 
-            SearchResult result = new SearchResult();
+            Household result = new Household();
             result.HouseholdID = houseHoldID;
             result.Persons = _contactsRepository.GetContactsForHousehold(result.HouseholdID);
             return Ok(result);       
         }
 
-
+        /// <summary>
+        /// creates a prospect household
+        /// </summary>
+        /// <param name="contacts">List of contacts</param>
+        /// <returns></returns>
         [HttpPost()]
         [MapToApiVersion("1.0")]
-        public IActionResult CreateProspectHousehold([FromBody]List<Contact> contacts)
+        public IActionResult CreateProspectHousehold([FromBody]ContactList contacts)
         {
-             if (contacts == null || contacts.Count == 0 || 
-                !contacts.Exists(c=>c.RelationShipType == Library.Contacts.RelationShipType.HEAD && c.LastName != null) )
+             if (contacts == null || contacts.list == null || contacts.list.Count == 0 || 
+                !contacts.list.Exists(c=>c.RelationShipType == Library.Contacts.RelationShipType.HEAD && !String.IsNullOrWhiteSpace(c.LastName)) )
                 return BadRequest();
-            SearchResult result = _contactsRepository.CreateProspectHousehold(contacts);
+            Household result = _contactsRepository.CreateProspectHousehold(contacts.list);
             return Ok(result);
         }
 
+        /// <summary>
+        /// creates a contact
+        /// </summary>
+        /// <param name="contact">contact information</param>
+        /// <returns></returns>
+        [HttpPost("Create")]
+        [MapToApiVersion("1.0")]
+        public IActionResult CreateContact([FromBody]Contact contact)
+        {
+             if (contact == null || contact.RelationShipType == Library.Contacts.RelationShipType.HEAD || !long.TryParse(contact.HouseholdId, out long value))
+                return BadRequest();
+            bool result = _contactsRepository.CreateContact(contact, Convert.ToInt64(contact.HouseholdId));
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// updates a contact
+        /// </summary>
+        /// <param name="contact">contact information</param>
+        /// <returns></returns>
+        [HttpPost("Update")]
+        [MapToApiVersion("1.0")]
+        public IActionResult UpdateContact([FromBody]Contact contact)
+        {
+            if (contact == null || contact.RelationShipType == Library.Contacts.RelationShipType.HEAD || !long.TryParse(contact.InvestorId, out long investorId) || string.IsNullOrEmpty(contact.LastName))
+                return BadRequest();
+            bool result = _contactsRepository.UpdateContact(contact);
+            return Ok(result);
+        }
 
     }
 }

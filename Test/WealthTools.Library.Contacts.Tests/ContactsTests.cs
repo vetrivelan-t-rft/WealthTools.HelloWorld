@@ -31,7 +31,7 @@ namespace WealthTools.Library.Contacts.Tests
         [MemberData(nameof(TestObjectGenerator.GetDemographicTestData), MemberType = typeof(TestObjectGenerator))]
         public void SearchContactsByDemographics(SearchParameters param)
         {
-            List<SearchResult> res = _contactsRepository.SearchAllContacts(param);
+            List<Household> res = _contactsRepository.SearchAllContacts(param);
             Assert.True(res.Count > 0 );
         }
 
@@ -39,7 +39,7 @@ namespace WealthTools.Library.Contacts.Tests
         [MemberData(nameof(TestObjectGenerator.GetAcctSearchTestData), MemberType = typeof(TestObjectGenerator))]
         public void SearchContactsByAcctNo(SearchParameters param)
         {
-            List<SearchResult> res = _contactsRepository.SearchAllContacts(param);
+            List<Household> res = _contactsRepository.SearchAllContacts(param);
             Assert.True(res.Count > 0);
         }
 
@@ -47,7 +47,7 @@ namespace WealthTools.Library.Contacts.Tests
         [MemberData(nameof(TestObjectGenerator.GetRepCodeSearchTestData), MemberType = typeof(TestObjectGenerator))]
         public void SearchContactsByRepCode(SearchParameters param)
         {
-            List<SearchResult> res = _contactsRepository.SearchAllContacts(param);
+            List<Household> res = _contactsRepository.SearchAllContacts(param);
             Assert.True(res.Count == 0);
         }
 
@@ -80,8 +80,16 @@ namespace WealthTools.Library.Contacts.Tests
 
         public void CreateProspectHousehold(List<Contact> contacts)
         {
-            SearchResult res = _contactsRepository.CreateProspectHousehold(contacts);
+            Household res = _contactsRepository.CreateProspectHousehold(contacts);
             Assert.True((int.TryParse(res.HouseholdID, out int hhid)) && hhid > 0 && res.Persons.Count > 0);
+        }
+
+        [Theory]
+        [InlineData("7840092")]
+        public void GetTeamsForHousehold(string householdID)
+        {
+            List<Team> res = _contactsRepository.GetHouseHoldTeams(householdID);
+            Assert.True(res.Count > 0);
         }
 
     }
@@ -95,7 +103,8 @@ namespace WealthTools.Library.Contacts.Tests
             yield return new object[]
             {
             new SearchParameters {
-                LastName = "co"
+                LastName = "Smith",
+                Count = 50
                  }
             };
 
@@ -130,7 +139,7 @@ namespace WealthTools.Library.Contacts.Tests
         public static IEnumerable<object[]> ContactsTestData()
         {
             List<Contact> Contacts = new List<Contact>();
-            Contact contact = new Contact() { LastName = "test123" };
+            Contact contact = new Contact() { LastName = "test80808" };
             Contacts.Add(contact);
             Contact contact1 = new Contact() { LastName = "test222" };
             Contacts.Add(contact1);
@@ -140,7 +149,7 @@ namespace WealthTools.Library.Contacts.Tests
 
             new List<Contact>()
             {
-                new Contact(){ LastName = "test123",RelationShipType=RelationShipType.HEAD },
+                new Contact(){ LastName = "test80808",RelationShipType=RelationShipType.HEAD },
                 new Contact(){LastName = "test222",RelationShipType=RelationShipType.DEPENDENT }
             }
             };

@@ -16,15 +16,43 @@ namespace WealthTools.Library.Proposals.Repositories
     public class ProposalsRepository : IProposalsRepository
     {
         readonly IDatabaseWrapper _dbWrapper;
-        readonly IContext _context;        
+        readonly IContext _context;
 
         public ProposalsRepository(IDatabaseWrapper dbWrapper, IContext context)
         {
             _dbWrapper = dbWrapper;
-            _context = context;            
+            _context = context;
+        }
+
+        public List<ProfileModelInfo> GetProfileModelData(List<string> planIds)
+        {            
+            List<ProfileModelInfo> infoList = new List<ProfileModelInfo>();
+            string sql = SqlConstants.GET_PROFILE_MODEL_INFO;
+            sql = _dbWrapper.BuildSqlInClauseQuery(planIds, ":PLAN_IDS", sql);
+            IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
+            {
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandText = sql;
+                _dbWrapper.BuildParamInClauseQuery(planIds, "PLAN_IDS", cmd);               
+            }, _context.Identity.InstitutionId);
+            foreach (var row in records)
+            {
+                ProfileModelInfo info = new ProfileModelInfo();
+                info.PlanId = row["PLAN_ID"].ToString();
+                info.ProfileId = row["PROFILE_ID"].ToString();
+                info.ProfileName = row["PROFILE_NAME"].ToString();
+                info.ModelId = row["MODEL_ID"].ToString();
+                info.ModelName = row["MODELNAME"].ToString();
+
+                infoList.Add(info);
+            }           
+            
+            return infoList;
         }
         public List<ProposalsModel> GetRecentProposals()
         {
+            List<ProfileModelInfo> profileModelInfo;
+            List<string> planIds = new List<string>();
             string planTypes = string.Join(",", Enum.GetValues(typeof(planTypeList)).Cast<int>());
             List<ProposalsModel> proposalList = new List<ProposalsModel>();
             IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd => {
@@ -41,7 +69,7 @@ namespace WealthTools.Library.Proposals.Repositories
             {
                 ProposalsModel proposal = new ProposalsModel();
                 proposal.ProposalId = row["PLAN_ID"].ToString();
-                proposal.ProposalName = (!string.IsNullOrEmpty(row["PLAN_NAME"].ToString())) ? row["PLAN_NAME"].ToString(): string.Empty;
+                proposal.ProposalName = (!string.IsNullOrEmpty(row["PLAN_NAME"].ToString())) ? row["PLAN_NAME"].ToString() : string.Empty;
                 proposal.PartyID = row["PARTY_ID"].ToString();
                 proposal.PartyName = row["PARTY_NAME"].ToString();
                 proposal.PartyType = row["PARTY_TYPE_NAME"].ToString();
@@ -55,11 +83,28 @@ namespace WealthTools.Library.Proposals.Repositories
 
                 proposalList.Add(proposal);
             }
+            foreach (ProposalsModel proposals in proposalList)
+            {
+                planIds.Add(proposals.ProposalId);
+            }
+
+            profileModelInfo = GetProfileModelData(planIds);
+            foreach (ProfileModelInfo infoList in profileModelInfo)
+            {
+                int index = proposalList.FindIndex(0, proposalList.Count, proposal => proposal.ProposalId == infoList.PlanId);
+                if (index != -1)
+                {
+                    proposalList[index].RiskFactor = string.IsNullOrEmpty(infoList.ProfileName) ? "-" : infoList.ProfileName;
+                    proposalList[index].ModelIncluded = string.IsNullOrEmpty(infoList.ModelName) ? "No Model" : infoList.ModelName;
+                }
+            }
             return proposalList;
         }
 
         public List<ProposalByHH> GetProposalsByHH(string householdID)
         {
+            List<ProfileModelInfo> profileModelInfo;           
+            List<string> planIdList = new List<string>();
             List<string> planTypeList = Constants.PlanTypeList;
             List<string> reportTypeList = Constants.ReportTypeList;
             List<ProposalByHH> proposalList = new List<ProposalByHH>();
@@ -94,17 +139,17 @@ namespace WealthTools.Library.Proposals.Repositories
                 sqlReports = _dbWrapper.BuildSqlInClauseQuery(planIds, ":PLAN_IDS", sqlReports);
                 sqlReports = _dbWrapper.BuildSqlInClauseQuery(reportTypeList, ":REPORT_TYPE_IDS", sqlReports);
                 sqlReports = _dbWrapper.BuildSqlInClauseQuery(planTypeList, ":PLAN_TYPE_IDS", sqlReports);
-                IEnumerable <IDataRecord> records1 = _dbWrapper.QueryDataRecord(cmd =>
-                {
-                    cmd.CommandType = CommandType.Text;
-                    cmd.CommandText = sqlReports;
-                    DatabaseWrapperHelper.AddInIntParameter(cmd, ":BROKER_ID", _context.Identity.BrokerId);
-                    _dbWrapper.BuildParamInClauseQuery(planIds, "PLAN_IDS", cmd);
-                    _dbWrapper.BuildParamInClauseQuery(reportTypeList, "REPORT_TYPE_IDS", cmd);
-                    _dbWrapper.BuildParamInClauseQuery(planTypeList, "PLAN_TYPE_IDS", cmd);
-                }, _context.Identity.InstitutionId);
+                IEnumerable<IDataRecord> records1 = _dbWrapper.QueryDataRecord(cmd =>
+               {
+                   cmd.CommandType = CommandType.Text;
+                   cmd.CommandText = sqlReports;
+                   DatabaseWrapperHelper.AddInIntParameter(cmd, ":BROKER_ID", _context.Identity.BrokerId);
+                   _dbWrapper.BuildParamInClauseQuery(planIds, "PLAN_IDS", cmd);
+                   _dbWrapper.BuildParamInClauseQuery(reportTypeList, "REPORT_TYPE_IDS", cmd);
+                   _dbWrapper.BuildParamInClauseQuery(planTypeList, "PLAN_TYPE_IDS", cmd);
+               }, _context.Identity.InstitutionId);
 
-                foreach(var reportRow in records1)
+                foreach (var reportRow in records1)
                 {
                     ArchivedReportInfo reportInfo = new ArchivedReportInfo();
                     reportInfo.Name = reportRow["NAME"].ToString();
@@ -119,6 +164,22 @@ namespace WealthTools.Library.Proposals.Repositories
 
             }
 
+            foreach (ProposalsModel proposals in proposalList)
+            {
+                planIdList.Add(proposals.ProposalId);
+            }
+
+            profileModelInfo = GetProfileModelData(planIdList);
+
+            foreach (ProfileModelInfo infoList in profileModelInfo)
+            {
+                int index = proposalList.FindIndex(0, proposalList.Count, proposal => proposal.ProposalId == infoList.PlanId);
+                if (index != -1)
+                {
+                    proposalList[index].RiskFactor = string.IsNullOrEmpty(infoList.ProfileName) ? "-" : infoList.ProfileName;
+                    proposalList[index].ModelIncluded = string.IsNullOrEmpty(infoList.ModelName) ? "No Model" : infoList.ModelName;
+                }
+            }
             return proposalList;
         }
 
@@ -128,7 +189,7 @@ namespace WealthTools.Library.Proposals.Repositories
             var executeResult = _dbWrapper.Execute(cmd =>
             {
                 cmd.CommandText = SqlConstants.DELETE_WEB_INVESTMENT_PLAN;
-                DatabaseWrapperHelper.AddInIntParameter(cmd, ":PLAN_ID", Planid.ToString());                         
+                DatabaseWrapperHelper.AddInIntParameter(cmd, ":PLAN_ID", Planid.ToString());
             }, _context.Identity.InstitutionId);
 
             if (executeResult > 0)
@@ -138,41 +199,41 @@ namespace WealthTools.Library.Proposals.Repositories
             return false;
         }
 
-        public long CreateNewProposal( string houseHoldID, string proposalName )
+        public long CreateNewProposal(string houseHoldID, string proposalName)
         {
-            
+
             long planId = -1;
             long solutionID = -1;
             string portfolioID = "-1";
-            int defaultPropAClassLevelId = -1;
+            long defaultPropAClassLevelId = -1;
             long processID = -1;
             long processLogID = -1;
             long investorID = -1;
 
-            defaultPropAClassLevelId = Convert.ToInt32( _dbWrapper.ExecuteScalar(cmd =>
+            defaultPropAClassLevelId = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd =>
+          {
+              cmd.CommandText = SqlConstants.GET_DEFAULT_ASSETCLASS_VIEW_ID; ;
+              DatabaseWrapperHelper.AddInLongParameter(cmd, ":GROUP_ID", _context.Identity.GroupId);
+          }, _context.Identity.InstitutionId));
+
+            solutionID = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd =>
             {
-                cmd.CommandText = SqlConstants.GET_DEFAULT_ASSETCLASS_VIEW_ID; ;
-                DatabaseWrapperHelper.AddInLongParameter(cmd, ":GROUP_ID", _context.Identity.GroupId);
+                cmd.CommandText = SqlConstants.GET_SEQUENCE_SOLUTION;
             }, _context.Identity.InstitutionId));
 
-            solutionID = Convert.ToInt32(_dbWrapper.ExecuteScalar(cmd =>
-            {
-                cmd.CommandText = SqlConstants.GET_SEQUENCE_SOLUTION;                 
-            }, _context.Identity.InstitutionId));     
 
-            
             //Create PlanID
-            planId = Convert.ToInt32(_dbWrapper.ExecuteScalar(cmd =>
+            planId = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd =>
             {
                 cmd.CommandText = SqlConstants.GET_SEQUENCE_INVESTMENT_PLAN;
             }, _context.Identity.InstitutionId));
 
             //Create PlanID
-            processID = Convert.ToInt32(_dbWrapper.ExecuteScalar(cmd =>
+            processID = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd =>
             {
                 cmd.CommandText = SqlConstants.GET_SEQUENCE_PROCESS;
             }, _context.Identity.InstitutionId));
-            processLogID = Convert.ToInt32(_dbWrapper.ExecuteScalar(cmd =>
+            processLogID = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd =>
             {
                 cmd.CommandText = SqlConstants.GET_SEQUENCE_PROCESS_LOG;
             }, _context.Identity.InstitutionId));
@@ -188,7 +249,7 @@ namespace WealthTools.Library.Proposals.Repositories
             while (itVal.MoveNext())
             {
                 profileid = Int32.Parse(itVal.Current.Key.ToString());
-                modelId = itVal.Current.Value.ToString();                
+                modelId = itVal.Current.Value.ToString();
             }
             //Need to revisit 
             //ProposalPathCollection proposalPaths = new ProposalPathCollection();
@@ -220,7 +281,7 @@ namespace WealthTools.Library.Proposals.Repositories
                 if (householdID > 0)
                 {
                     //Get InvestorID
-                    investorID = Convert.ToInt32(_dbWrapper.ExecuteScalar(cmd =>
+                    investorID = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd =>
                     {
                         cmd.CommandText = SqlConstants.GET_INVESTOR_ID;
                         DatabaseWrapperHelper.AddInIntParameter(cmd, ":HOUSEHOLD_ID", householdID.ToString());
@@ -324,7 +385,7 @@ namespace WealthTools.Library.Proposals.Repositories
                     cmd.CommandText = SqlConstants.INSERT_RECENT_PROPOSAL;
                     DatabaseWrapperHelper.AddInStringParameter(cmd, "BROKER_ID", _context.Identity.BrokerId);
                     DatabaseWrapperHelper.AddInStringParameter(cmd, "PLAN_ID", planId.ToString());
-                    DatabaseWrapperHelper.AddInStringParameter(cmd, "PLAN_TYPE_ID", Convert.ToInt32(planTypeList.recentProposal).ToString());                   
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "PLAN_TYPE_ID", Convert.ToInt64(planTypeList.recentProposal).ToString());
                 }));
             }
             bool result = _dbWrapper.ExecuteBatch(configureCommandList.ToArray(), _context.Identity.InstitutionId);
@@ -339,11 +400,11 @@ namespace WealthTools.Library.Proposals.Repositories
                 DatabaseWrapperHelper.AddInStringParameter(cmd, ":Pi_Inst_ID", _context.Identity.InstitutionId.ToString());
                 DatabaseWrapperHelper.AddInStringParameter(cmd, ":Pi_Table_Name", tableName);
                 DatabaseWrapperHelper.AddInStringParameter(cmd, ":Pi_Record_Type", recordType);
-            }, _context.Identity.InstitutionId).ToString();            
+            }, _context.Identity.InstitutionId).ToString();
             return seq;
         }
 
-        private  SortedList<int, string> GetDefaultProfileAndModelId()
+        private SortedList<int, string> GetDefaultProfileAndModelId()
         {
             SortedList<int, string> defaultProfileAndModelId = new SortedList<int, string>();
             List<string> defaultOptonIds = new List<string>();
@@ -359,15 +420,15 @@ namespace WealthTools.Library.Proposals.Repositories
 
             var sql = SqlConstants.GET_DEFAULT_PROFILE_MODEL_ID;
             sql = _dbWrapper.BuildSqlInClauseQuery(defaultOptonIds, ":OPTION_IDS", sql);
-             records = _dbWrapper.QueryDataRecord(cmd =>
-            {
-                cmd.CommandType = CommandType.Text;
-                cmd.CommandText = sql;
-                _dbWrapper.BuildParamInClauseQuery(defaultOptonIds, "OPTION_IDS", cmd);
-                DatabaseWrapperHelper.AddInIntParameter(cmd, ":GROUP_ID", _context.Identity.GroupId);
-                DatabaseWrapperHelper.AddInIntParameter(cmd, ":OPTION_COUNT", defaultOptonIds.Count.ToString());
+            records = _dbWrapper.QueryDataRecord(cmd =>
+           {
+               cmd.CommandType = CommandType.Text;
+               cmd.CommandText = sql;
+               _dbWrapper.BuildParamInClauseQuery(defaultOptonIds, "OPTION_IDS", cmd);
+               DatabaseWrapperHelper.AddInIntParameter(cmd, ":GROUP_ID", _context.Identity.GroupId);
+               DatabaseWrapperHelper.AddInIntParameter(cmd, ":OPTION_COUNT", defaultOptonIds.Count.ToString());
 
-            }, _context.Identity.InstitutionId);
+           }, _context.Identity.InstitutionId);
 
             foreach (var row in records)
             {
@@ -375,9 +436,117 @@ namespace WealthTools.Library.Proposals.Repositories
                 string _modelId = row["MODEL_ID"].ToString();
                 defaultProfileAndModelId[_Id] = _modelId;
             }
-            return defaultProfileAndModelId;        
+            return defaultProfileAndModelId;
+        }
+
+        public List<ProposalsModel> SearchProposals(ProposalSearchParameters searchParameters)
+        {
+            List<ProfileModelInfo> profileModelInfo;
+            List<string> planIdList = new List<string>();
+            List<ProposalsModel> proposalList = new List<ProposalsModel>();
+            IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                if (searchParameters.Searchby == SearchBy.ACCOUNTNUMBER)
+                {
+                cmd.CommandText = "PKG_PG.GETINVPROPOSAL_BY_ACCTNO";//: "PKG_PG.GETPROSPPROPOSAL_BY_ACCTNO";
+                    DatabaseWrapperHelper.AddInLongParameter(cmd, "A_NBROKER_ID", _context.Identity.BrokerId);
+                    DatabaseWrapperHelper.AddInIntParameter(cmd, "A_NSTARTROW", "1");
+                    DatabaseWrapperHelper.AddInIntParameter(cmd, "A_NCOUNT", searchParameters.Count.ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_NSORTBYCOL", "");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VASC_YN", "Y");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VTOTCNTONLY_YN", "N");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VPLANTYPELIST", "14,15,17");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VACCTNO", HandleSpecialCharacters(searchParameters.AccountNumber));
+                    DatabaseWrapperHelper.AddOutCursorParameter(cmd, "A_RCPROPOSALLIST");
+                    DatabaseWrapperHelper.AddOutIntParameter(cmd, "A_UTSTATUS");
+                    DatabaseWrapperHelper.AddOutStringParameter(cmd, "A_UTSTATUSMSG", 2000);
+                }
+                else
+                {
+                    cmd.CommandText = "PKG_PG.GETINVPROPOSAL"; //"PKG_PG.GETPROSPPROPOSAL"
+                    DatabaseWrapperHelper.AddInLongParameter(cmd, "A_NBROKER_ID", _context.Identity.BrokerId);
+                    DatabaseWrapperHelper.AddInIntParameter(cmd, "A_NSTARTROW", "1");
+                    DatabaseWrapperHelper.AddInIntParameter(cmd, "A_NCOUNT", searchParameters.Count.ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_NSORTBYCOL", "");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VASC_YN", "Y");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VTOTCNTONLY_YN", "N");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VPLANTYPELIST", "14,15,17");
+
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VLNAME", ConvertSpecialCharacters(searchParameters.LastName));
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VFNAME", ConvertSpecialCharacters(searchParameters.FirstName));
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VSSN_TIN", string.Empty);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VCITY", "");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VSTATE", "");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VZIP", "");                   
+                    DatabaseWrapperHelper.AddOutCursorParameter(cmd, "A_RCPROPOSALLIST");
+                    DatabaseWrapperHelper.AddOutIntParameter(cmd, "A_UTSTATUS");
+                    DatabaseWrapperHelper.AddOutStringParameter(cmd, "A_UTSTATUSMSG", 2000);
+                }
+            }, _context.Identity.InstitutionId);
+            foreach (var row in records)
+            {
+                ProposalsModel proposal = new ProposalsModel();
+                proposal.ProposalId = row["PLAN_ID"].ToString();
+                proposal.ProposalName = (!string.IsNullOrEmpty(row["PLAN_NAME"].ToString())) ? row["PLAN_NAME"].ToString() : string.Empty;
+                proposal.PartyID = row["PARTY_ID"].ToString();
+                proposal.PartyName = row["PARTY_NAME"].ToString();
+                proposal.PartyType = row["PARTY_TYPE_NAME"].ToString();
+                proposal.LastModifiedDate = row["LAST_MODIFIED_DATE"].ToString();
+                proposal.IsEntitle = row["FULL_ENT"].ToString();
+                proposal.RowNum = Int32.Parse(row["RN"].ToString());
+                proposal.PlanTypeId = row["PLAN_TYPE_ID"].ToString();
+                proposal.ProgramName = row["PROGRAM_NAME"].ToString();
+                proposal.IsNoPartialEntitlement = row["NO_ENT"].ToString();
+                proposal.ModelMinorVersion = row["MODEL_MINOR_VERSION"].ToString();
+
+                proposalList.Add(proposal);
+            }
+
+            foreach (ProposalsModel proposals in proposalList)
+            {
+                planIdList.Add(proposals.ProposalId);
+            }
+
+            profileModelInfo = GetProfileModelData(planIdList);
+
+            foreach (ProfileModelInfo infoList in profileModelInfo)
+            {
+                int index = proposalList.FindIndex(0, proposalList.Count, proposal => proposal.ProposalId == infoList.PlanId);
+                if (index != -1)
+                {
+                    proposalList[index].RiskFactor = string.IsNullOrEmpty(infoList.ProfileName) ? "-" : infoList.ProfileName;
+                    proposalList[index].ModelIncluded = string.IsNullOrEmpty(infoList.ModelName) ? "No Model" : infoList.ModelName;
+                }
+            }
+
+            return proposalList;
+        }
+
+        private string HandleSpecialCharacters(string inputString)
+        {
+            string modifiedString = inputString;
+            if (inputString != null && inputString != string.Empty && inputString.IndexOf("'") >= 0)
+            {
+                modifiedString = inputString.Replace("'", "''");
+            }
+            return modifiedString;
+        }
+        private static string ConvertSpecialCharacters(string inputText)
+        {
+            inputText = inputText.Replace(Oracle.Quote, Oracle.Quote + Oracle.Quote);
+            inputText = inputText.Replace(Oracle.Escape, Oracle.Escape + Oracle.Escape);
+            return inputText;
+        }
+
+        public struct Oracle
+        {
+            public const string Wildcard = "%";
+            public const string Escape = @"\";
+            public const string Quote = @"'";
+
+            public static string[] Specials = new string[] { "%", "_" };
         }
 
     }
-
 }

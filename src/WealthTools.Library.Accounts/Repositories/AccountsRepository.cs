@@ -9,6 +9,7 @@ using WealthTools.Common.Models.Interfaces;
 using WealthTools.Library.Accounts.Handlers;
 using WealthTools.Library.Accounts.Interfaces;
 using WealthTools.Library.Accounts.Models;
+using WealthTools.Library.BrokerManager.Interfaces;
 
 namespace WealthTools.Library.Accounts.Repositories
 {
@@ -17,19 +18,22 @@ namespace WealthTools.Library.Accounts.Repositories
         IDatabaseWrapper _dbWrapper;
         IContext _context;
         IConnectionManager _connectionManager;
+        IBrokerMgrRepository _brokerMgrRepository;
 
-        public AccountsRepository(IDatabaseWrapper dbWrapper, IContext context)
+        public AccountsRepository(IDatabaseWrapper dbWrapper, IContext context, IBrokerMgrRepository brokerMgrRepository)
         {
             _dbWrapper = dbWrapper;
             _context = context;
+            _brokerMgrRepository = brokerMgrRepository;
         }
 
         public List<AccountPosition> GetAccountSummary(string householdID, string planId)
         {
             List<AccountPosition> listOfAccounts = new List<AccountPosition>();
             int _householdID = -1;
-            if (householdID != string.Empty) { 
-                _householdID = Int32.Parse(householdID);
+            if (!String.IsNullOrWhiteSpace(householdID)  && !String.IsNullOrWhiteSpace(planId)) {
+                if (!Int32.TryParse(householdID, out _householdID) || !Int32.TryParse(planId, out int _planID)) return listOfAccounts;
+               // _householdID = Int32.Parse(householdID);
                 List<AccountKeyInfo> accts = GetAccountsForHousehold(householdID);
                 List<string> acctIds = new List<string>();
                 if (accts != null && accts.Count > 0)
@@ -86,14 +90,14 @@ namespace WealthTools.Library.Accounts.Repositories
             {
                 AccountKeyInfo account = new AccountKeyInfo();
                 account.AccountID = row["ACCOUNT_ID"].ToString();
-                account.Account_name = row["ACCOUNT_NAME"].ToString();
-                account.Account_number = row["ACCOUNT_NUM"].ToString();
+                account.AccountName = row["ACCOUNT_NAME"].ToString();
+                account.AccountNumber = row["ACCOUNT_NUM"].ToString();
                 account.Attribute2 = row["ATTR2"].ToString();
-                account.Display_type_id = row["DISPLAY_TYPE_ID"].ToString();
+                account.DisplayTypeId = row["DISPLAY_TYPE_ID"].ToString();
                 account.InternalYN = row["INTERNAL_YN"].ToString();
                 account.ProgramID = row["PROGRAM_ID"].ToString();
                 //account.TestAccount = Convert.ToBoolean(row["TEST_YN"]);
-                account.Error_message = "";
+                account.ErrorMessage = "";
                 accountsResult.Add(account);
             }
             return accountsResult;
@@ -146,30 +150,30 @@ namespace WealthTools.Library.Accounts.Repositories
             {
                 AccountPosition acct = new AccountPosition();
                 acct.AccountID = row["ACCOUNT_ID"].ToString();
-                acct.Account_name = row["ACCOUNT_NAME"].ToString();
+                acct.AccountName = row["ACCOUNT_NAME"].ToString();
                 acct.IrsName = row["IRS_NAME"].ToString();
-                acct.Owner_name = row["OWNER_NAME"].ToString();
-                acct.Account_number = row["ACCOUNT_NUM"].ToString();
+                acct.OwnerName = row["OWNER_NAME"].ToString();
+                acct.AccountNumber = row["ACCOUNT_NUM"].ToString();
                 acct.ATTR2 = row["ATTR2"].ToString();
-                acct.Program_id = row["PROGRAM_ID"].ToString();
-                acct.Cash_component = row["CASH_COMPONENT"] is DBNull ? 0 : Convert.ToDouble(row["CASH_COMPONENT"]);
+                acct.ProgramId = row["PROGRAM_ID"].ToString();
+                acct.CashComponent = row["CASH_COMPONENT"] is DBNull ? 0 : Convert.ToDouble(row["CASH_COMPONENT"]);
                 acct.CurrencyCode = row["CURRENCY_CODE"].ToString();
                 acct.Rate = row["RATE"] is DBNull ? 0.0 : Convert.ToDouble(row["RATE"]);
-                acct.Long_balance = row["LONG_MARKET_VALUE"] is DBNull ? 0 : Convert.ToDouble(row["LONG_MARKET_VALUE"]);
-                acct.Short_balance = row["SHORT_MARKET_VALUE"] is DBNull ? 0 : Convert.ToDouble(row["SHORT_MARKET_VALUE"]);
-                acct.Market_value = row["MARKET_VALUE"] is DBNull ? 0 : Convert.ToDouble(row["MARKET_VALUE"]);
+                acct.LongBalance = row["LONG_MARKET_VALUE"] is DBNull ? 0 : Convert.ToDouble(row["LONG_MARKET_VALUE"]);
+                acct.ShortBalance = row["SHORT_MARKET_VALUE"] is DBNull ? 0 : Convert.ToDouble(row["SHORT_MARKET_VALUE"]);
+                acct.MarketValue = row["MARKET_VALUE"] is DBNull ? 0 : Convert.ToDouble(row["MARKET_VALUE"]);
                 acct.InternalValueDBField = row["INTERNAL_MANAGED_YN"].ToString();
                 acct.ManualDBField = row["MANUAL_FLAG"].ToString() != "N";
-                acct.Tax_treatmentDBField = row["TAX_STATUS_ID"] is DBNull ? 0 : Convert.ToInt64(row["TAX_STATUS_ID"]);
-                acct.Nature_of_acct = row["NATURE_OF_ACCOUNT"].ToString();
-                acct.Ownership_typeDBField = row["FILING_STATUS_ID"] is DBNull ? 0 : Convert.ToInt64(row["FILING_STATUS_ID"]);
-                acct.Account_type_id = row["ACCOUNT_TYPE_ID"] is DBNull ? 0 : Convert.ToInt64(row["ACCOUNT_TYPE_ID"]);
-                acct.Primary_owner_id = row["PRIMARY_OWNER_ID"].ToString();
-                acct.Acct_owner_id = row["ACCT_OWNER_ID"].ToString();
-                acct.Secondary_owner_id = row["SECONDARY_OWNER_ID"].ToString();
-                acct.AccountDetailDBField = row["ACCOUNT_DETAIL"].ToString();
+                acct.TaxTreatment = row["TAX_STATUS_ID"] is DBNull ? TaxTreatment.DEFERRED: (TaxTreatment)Convert.ToInt64(row["TAX_STATUS_ID"]);
+                acct.NatureOfAcct = row["NATURE_OF_ACCOUNT"].ToString();
+                acct.OwnershipType = row["FILING_STATUS_ID"] is DBNull ? OwnershipType.JOINT : (OwnershipType)(Convert.ToInt32(row["FILING_STATUS_ID"]));
+                acct.AccountTypeId = row["ACCOUNT_TYPE_ID"] is DBNull ? 0 : Convert.ToInt64(row["ACCOUNT_TYPE_ID"]);
+                acct.PrimaryOwnerId = row["PRIMARY_OWNER_ID"].ToString();
+                acct.AcctOwnerId = row["ACCT_OWNER_ID"].ToString();
+                acct.SecondaryOwnerId = row["SECONDARY_OWNER_ID"].ToString();
+                acct.AccountDetail = row["ACCOUNT_DETAIL"].ToString() == "Y"? AccountDetail.SECURITY:AccountDetail.ASSET_CLASS;
                 acct.LastUpdatedDate = row["last_modified_date"].ToString();
-                acct.Portfolio_Acct_Type = row["PORTFOLIO_ACCT_TYPE"].ToString();
+                acct.PortfolioAcctType = row["PORTFOLIO_ACCT_TYPE"].ToString();
                 acct.DatasourceID = row["DATASOURCE_ID"] is DBNull ? 0 : Convert.ToInt32(row["DATASOURCE_ID"]);
 
                 acctDetail.Add(acct);
@@ -207,12 +211,12 @@ namespace WealthTools.Library.Accounts.Repositories
                 position.AccountID = row["ACCOUNT_ID"].ToString();
                 position.Commissions = row["COMMISSION"] is DBNull ? 0 : Convert.ToDouble(row["COMMISSION"]);
                 position.EstimatedAnnualIncome = row["ESTIMATED_ANNUAL_INCOME"] is DBNull ? 0 : Convert.ToDouble(row["ESTIMATED_ANNUAL_INCOME"]);
-                position.Is_market_value_presetYN = row["MARKET_VALUE_PRESET"].ToString();
-                position.Market_value_entry_modeDB = row["MKT_VAL_ENTRY_MODE"].ToString();
-                position.Open_date = row["PURCHASE_DATE"].ToString();
-                position.Open_price = row["PURCHASE_PRICE"] is DBNull ? 0 : Convert.ToDouble(row["PURCHASE_PRICE"]);
-                position.Position_termDB = row["POSITION_TERM"].ToString();
-                position.Pos_id = row["POSITION_ID"] is DBNull ? 0 : Convert.ToInt64(row["POSITION_ID"]);
+                position.IsMarketValuePresetYN = row["MARKET_VALUE_PRESET"].ToString();
+                position.MarketValue_entry_modeDB = row["MKT_VAL_ENTRY_MODE"].ToString();
+                position.OpenDate = row["PURCHASE_DATE"].ToString();
+                position.OpenPrice = row["PURCHASE_PRICE"] is DBNull ? 0 : Convert.ToDouble(row["PURCHASE_PRICE"]);
+                position.PositionTermDB = row["POSITION_TERM"].ToString();
+                position.PosId = row["POSITION_ID"] is DBNull ? 0 : Convert.ToInt64(row["POSITION_ID"]);
                 position.Qty = row["QUANTITY"] is DBNull ? 0 : Convert.ToDouble(row["QUANTITY"]);
                 position.SecID = row["SEC_ID"].ToString();
 
@@ -253,38 +257,38 @@ namespace WealthTools.Library.Accounts.Repositories
                                 position.CogId = row["COG_ID"].ToString();
                                 position.CurrencyCode = row["CURRENCY_CODE"].ToString();
                                 position.CurrentFactor = row["CURRENT_FACTOR"] is DBNull ? 0.0 : Convert.ToDouble(row["current_factor"]);
-                                position.Current_price = row["CURRENT_PRICE"] is DBNull ? 0.0 : Convert.ToDouble(row["CURRENT_PRICE"]);
-                                position.Pricing_date = row["AS_OF_DATE"].ToString();
-                                position.Security_Detail.Cusip = row["CUSIP"].ToString();
-                                position.Security_Detail.Sec_sedol = row["SECURITY_SEDOL"].ToString();
-                                position.Security_Detail.Sec_name = row["NAME"].ToString();
-                                position.Security_Detail.Sec_type = row["SEC_TYPE"].ToString();
-                                position.Security_Detail.Sub_type = row["SUB_TYPE"].ToString();
-                                position.Security_Detail.Sec_symbol = row["TICKER"].ToString();
-                                position.Security_Detail.Price_factor = row["PRICE_FACTOR"] is DBNull ? 0 : Convert.ToDouble(row["PRICE_FACTOR"]);
-                                position.Security_Detail.Price_ADJ_factor = row["PRICE_ADJ_FACTOR"] is DBNull ? 0 : Convert.ToDouble(row["PRICE_ADJ_FACTOR"]);
-                                position.Security_Detail.Currency_Code = row["CURRENCY_CODE"].ToString();
-                                position.Security_Detail.Currency_Conv_Factor = row["RATE"] is DBNull ? 0 : Convert.ToDouble(row["RATE"]);
-                                position.Security_Detail.Sec_status = row["STATUS"].ToString();
-                                position.Security_Detail.FileExists = row["FILEEXISTS"] is DBNull ? false : Convert.ToBoolean(row["FILEEXISTS"]);
-                                if (position.Current_price < PriceHelper.ZeroPrice)
+                                position.CurrentPrice = row["CURRENT_PRICE"] is DBNull ? 0.0 : Convert.ToDouble(row["CURRENT_PRICE"]);
+                                position.PricingDate = row["AS_OF_DATE"].ToString();
+                                position.SecurityDetail.Cusip = row["CUSIP"].ToString();
+                                position.SecurityDetail.SecSedol = row["SECURITY_SEDOL"].ToString();
+                                position.SecurityDetail.SecName = row["NAME"].ToString();
+                                position.SecurityDetail.SecType = row["SEC_TYPE"].ToString();
+                                position.SecurityDetail.SubType = row["SUB_TYPE"].ToString();
+                                position.SecurityDetail.SecSymbol = row["TICKER"].ToString();
+                                position.SecurityDetail.PriceFactor = row["PRICE_FACTOR"] is DBNull ? 0 : Convert.ToDouble(row["PRICE_FACTOR"]);
+                                position.SecurityDetail.Price_ADJ_factor = row["PRICE_ADJ_FACTOR"] is DBNull ? 0 : Convert.ToDouble(row["PRICE_ADJ_FACTOR"]);
+                                position.SecurityDetail.CurrencyCode = row["CURRENCY_CODE"].ToString();
+                                position.SecurityDetail.CurrencyConvFactor = row["RATE"] is DBNull ? 0 : Convert.ToDouble(row["RATE"]);
+                                position.SecurityDetail.SecStatus = row["STATUS"].ToString();
+                                position.SecurityDetail.FileExists = row["FILEEXISTS"] is DBNull ? false : Convert.ToBoolean(row["FILEEXISTS"]);
+                                if (position.CurrentPrice < PriceHelper.ZeroPrice)
                                 {
                                     double price = PriceHelper.DefaultPrice;
-                                    if(position.Security_Detail.Sec_type != null)
-                                    if (position.Security_Detail.Sec_type.CompareTo("FI") == 0)
+                                    if(position.SecurityDetail.SecType != null)
+                                    if (position.SecurityDetail.SecType.CompareTo("FI") == 0)
                                         price *= 100.0;
-                                    position.Current_priceDB = price;
+                                    position.CurrentPriceDB = price;
                                 }
-                                //For AC level securities, the as of date is null. Hence, update the Pricing_date
+                                //For AC level securities, the as of date is null. Hence, update the PricingDate
                                 //with the last modified date of the account.
-                                if (position.Security_Detail.Sec_type == "AC")
+                                if (position.SecurityDetail.SecType == "AC")
                                 {
-                                    if (position.Current_price < PriceHelper.ZeroPrice)
-                                        position.Current_priceDB = PriceHelper.DefaultPrice;
-                                    position.Pricing_date = account.Last_modified_date;
+                                    if (position.CurrentPrice < PriceHelper.ZeroPrice)
+                                        position.CurrentPriceDB = PriceHelper.DefaultPrice;
+                                    position.PricingDate = account.LastModifiedDate;
                                 }
                                 // set HasFactSheet flag
-                                // position.Security_Detail.HasFactSheet = GetFactSheetInfo(context, position);
+                                // position.SecurityDetail.HasFactSheet = GetFactSheetInfo(context, position);
                             }
                         }
                     }
@@ -298,7 +302,7 @@ namespace WealthTools.Library.Accounts.Repositories
                 List<OpenPosition> removedItems = new List<OpenPosition>();
                 foreach (OpenPosition position in account.Positions)
                 {
-                    if (position != null && (position.Security_Detail.Sec_status == "" || position.Security_Detail.Sec_status == "IN"))
+                    if (position != null && (position.SecurityDetail.SecStatus == "" || position.SecurityDetail.SecStatus == "IN"))
                         removedItems.Add(position);
                 }
 
@@ -315,9 +319,9 @@ namespace WealthTools.Library.Accounts.Repositories
                 //For internal accounts this value is obtained from bo_account_balance table
                 if (account != null) //&& (account.InternalValue == false || account.Manual == true))
                 {
-                    account.Market_value = AccountBalanceTraits.CalculateBalance(account);
-                    account.Long_balance = AccountBalanceTraits.CalculateLongBalance(account);
-                    account.Short_balance = AccountBalanceTraits.CalculateShortBalance(account);
+                    account.MarketValue = AccountBalanceTraits.CalculateBalance(account);
+                    account.LongBalance = AccountBalanceTraits.CalculateLongBalance(account);
+                    account.ShortBalance = AccountBalanceTraits.CalculateShortBalance(account);
                 }
             }
 
@@ -343,16 +347,16 @@ namespace WealthTools.Library.Accounts.Repositories
                 foreach (PositionBase position in account.Positions)
                 {
                     noOfSecurity += 1;
-                    if ((position.Position_term == PositionBase.tPositionTerm.LONG)
-                            && (position.Market_value > 0))
+                    if ((position.PositionTerm == PositionTerm.LONG)
+                            && (position.MarketValue > 0))
                     {
-                        accountLongBalance += position.Market_value;
+                        accountLongBalance += position.MarketValue;
                     }
                 }
-                account.Sec_Count = noOfSecurity;
-                account.Long_balance = accountLongBalance;
-                account.Market_value = account.Long_balance
-                                                        + ((account.Cash_component > 0) ? account.Cash_component : 0);
+                account.SecCount = noOfSecurity;
+                account.LongBalance = accountLongBalance;
+                account.MarketValue = account.LongBalance
+                                                        + ((account.CashComponent > 0) ? account.CashComponent : 0);
 
                 accountLongBalance = 0;
             }
@@ -393,39 +397,37 @@ namespace WealthTools.Library.Accounts.Repositories
                         {
                             string accountID = apIterator.AccountID;
                             if (postion.AccountId == accountID && postion.Pct == 100)
-                                apIterator.Include_account_yn = "Y";
-                            string accountDetail = apIterator.Account_detail;
-                            if (!accountDetail.Equals(AccountBasics.tAccountDetail.INVALID_ACCOUNTDETAIL))
-                            {
+                                apIterator.IncludeAccountYN = "Y";
+                            
                                 foreach (PositionBase opm in apIterator.Positions)
                                 {
-                                    opm.Security_Detail.Sec_name = (opm.Security_Detail.Sec_name == string.Empty) ? "--" : opm.Security_Detail.Sec_name;
+                                    opm.SecurityDetail.SecName = (opm.SecurityDetail.SecName == string.Empty) ? "--" : opm.SecurityDetail.SecName;
 
                                     //if the market value for shot postion is not negative, make it negative
-                                    if ((opm.Position_term == PositionBase.tPositionTerm.SHORT) && (opm.Market_value > 0))
-                                        opm.Market_value = (opm.Market_value * -1.0);
-                                    if ((opm.Position_term == PositionBase.tPositionTerm.SHORT) && (opm.Qty > 0))
-                                        opm.Qty = (opm.Qty * -1.0);
+                                    if ((opm.PositionTerm == PositionTerm.SHORT) && (opm.MarketValue > 0))
+                                        opm.MarketValue = (opm.MarketValue * -1.0);
+                                    //if ((opm.PositionTerm == PositionBase.tPositionTerm.SHORT) && (opm.Qty > 0))
+                                      //  opm.Qty = (opm.Qty * -1.0);
                                     if (positionCollection.Count > 0)
                                     {
                                         if (postion.SecId == opm.SecID && postion.AccountId == opm.AccountID)
                                         {
-                                            opm.Locked_yn = postion.lockedYN;
-                                            opm.Exclude_yn = postion.ExcludeYN;
+                                            opm.LockedYN = postion.lockedYN;
+                                            opm.ExcludeYN = postion.ExcludeYN;
 
                                             if (postion.ExcludeYN == true)//subtract the market value
                                             {
-                                                if (opm.Position_term.Equals(PositionBase.tPositionTerm.LONG) && opm.Market_value > 0)
+                                                if (opm.PositionTerm.Equals(PositionTerm.LONG) && opm.MarketValue > 0)
                                                 {
-                                                    apIterator.Long_balance = apIterator.Long_balance - opm.Market_value;
-                                                    apIterator.Market_value = apIterator.Market_value - opm.Market_value;
+                                                    apIterator.LongBalance = apIterator.LongBalance - opm.MarketValue;
+                                                    apIterator.MarketValue = apIterator.MarketValue - opm.MarketValue;
                                                 }
                                             }
                                         }
                                     }
 
                                 }
-                            }
+                            
                         }
                     }
                 }
@@ -512,12 +514,12 @@ namespace WealthTools.Library.Accounts.Repositories
                 {
                     if (existingAcctIds.Contains(account.AccountID))
                     {
-                        if (account.Include_account_yn != "Y")
+                        if (account.IncludeAccountYN != "Y")
                             index += index + 2; 
                     }
                     else
                     {
-                        if (account.Include_account_yn == "Y")
+                        if (account.IncludeAccountYN == "Y")
                             index += index * 3;
                     }
                 }
@@ -532,12 +534,12 @@ namespace WealthTools.Library.Accounts.Repositories
                         //if the acount isn't there insert it.
                         if (existingAcctIds.Contains(account.AccountID))
                         {
-                            if (account.Include_account_yn != "Y")
+                            if (account.IncludeAccountYN != "Y")
                                 action = "Delete";
                         }
                         else
                         {
-                            if (account.Include_account_yn == "Y")
+                            if (account.IncludeAccountYN == "Y")
                                 action = "Insert";
                         }
                         if (action == "Delete")
@@ -699,29 +701,29 @@ namespace WealthTools.Library.Accounts.Repositories
             return seq;
         }
 
-        public Boolean SavePositions(string planId, AccountPosition accountPosition)
+        public Boolean LockExcludePositions(string planId, LockExclAcct accountPosition)
         {
             Boolean result = false;
             if (accountPosition != null && accountPosition.AccountID != "-1")
             {
                 string accountID = accountPosition.AccountID;
-                string accountDetail = accountPosition.Account_detail;
+                //AccountDetail accountDetail = accountPosition.AccountDetail;
                 string lockedSecId = string.Empty;
                 string excludedSecId = string.Empty;
                 string portfolioId = GetInitalPortfolioId(planId);
 
                 var index = accountPosition.Positions.Count;
-                foreach (PositionBase opm in accountPosition.Positions)
+                foreach (LockExclPosition opm in accountPosition.Positions)
                 {
                     //Check if the sec_id excluded in web_position_filter table
-                    if (opm.Exclude_yn == true || opm.Locked_yn == true)
+                    if (opm.ExcludeYN == true || opm.LockedYN == true)
                     {
                         index++;
                     }
                 }
                 var i = 0;
                 Action<IDbCommand>[] CommandList = new Action<IDbCommand>[index];
-                foreach (PositionBase opm in accountPosition.Positions)
+                foreach (LockExclPosition opm in accountPosition.Positions)
                 {
                     CommandList[i] = new Action<IDbCommand>(cmd => {
                         cmd.CommandType = CommandType.Text;
@@ -733,10 +735,10 @@ namespace WealthTools.Library.Accounts.Repositories
                     i++;
                 }
 
-                foreach (PositionBase opm in accountPosition.Positions)
+                foreach (LockExclPosition opm in accountPosition.Positions)
                 {
                     //Check if the sec_id excluded in web_position_filter table
-                    if (opm.Exclude_yn == true || opm.Locked_yn == true)
+                    if (opm.ExcludeYN == true || opm.LockedYN == true)
                     {
                         //exclude the security
                         CommandList[i] = new Action<IDbCommand>(cmd =>
@@ -746,8 +748,8 @@ namespace WealthTools.Library.Accounts.Repositories
                             DatabaseWrapperHelper.AddInStringParameter(cmd, "PORTFOLIO_ID", portfolioId);
                             DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", accountPosition.AccountID);
                             DatabaseWrapperHelper.AddInStringParameter(cmd, "SEC_ID", opm.SecID);
-                            DatabaseWrapperHelper.AddInStringParameter(cmd, "LOCKED_YN", (opm.Locked_yn == true ? "Y" : "N"));
-                            DatabaseWrapperHelper.AddInStringParameter(cmd, "EXCLUDE_YN", (opm.Exclude_yn == true ? "Y" : "N"));
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "LOCKED_YN", (opm.LockedYN == true ? "Y" : "N"));
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "EXCLUDE_YN", (opm.ExcludeYN == true ? "Y" : "N"));
                         });
                         i++;
                     }
@@ -756,6 +758,323 @@ namespace WealthTools.Library.Accounts.Repositories
             }
             return result;
         }
+        public List<AccountType> GetAccountTypes()
+        {
+            List<AccountType> accountTypes = new List<AccountType>();
+            IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
+            {
+                cmd.CommandText = SqlConstants.GET_ACCOUNT_TYPES;
+            }, _context.Identity.InstitutionId);
+            foreach (var row in records)
+            {
+                AccountType accountType = new AccountType();
+                accountType.AccountTypeId = row["ACCOUNT_TYPE_ID"] is DBNull ? 0 : Convert.ToInt64(row["ACCOUNT_TYPE_ID"]);
+                accountType.AccountTaxStatusId = row["TAX_STATUS_ID"] is DBNull ? 0 : Convert.ToInt64(row["TAX_STATUS_ID"]);
+                accountType.AccountTypeDesc = row["ACCOUNT_TYPE_DESCR"].ToString();
+                accountType.TaxTypeDesc = row["ACCOUNT_TAX_TYPE_DESC"].ToString();
+                accountTypes.Add(accountType);
+            }
+            return accountTypes;
+        }
+        public string CreateAccountBasicInfo(AccountBasicInfoRequest account)
+        {
+            long accountId =  Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd =>
+            {
+                cmd.CommandText = SqlConstants.GET_SEQUENCE_ACCOUNT_ID;
+            }, _context.Identity.InstitutionId));
+            string  dataSourceID = GetDataSourceID();
+            string newActId = "";
+
+            List<Action<IDbCommand>> configureCommandList = new List<Action<IDbCommand>>();
+            if (accountId != -1 && long.TryParse(account.HouseholdId,out long householdId))
+            {
+                //Create Account - Web_Account
+                newActId = string.Format("W-{0}", accountId.ToString());
+                configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                {
+                    cmd.CommandText = SqlConstants.CREATE_ACCOUNT_INFO;
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", newActId);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_NAME", account.AccountName);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "TAX_TREATMENT", ((int)account.TaxTreatment).ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_TYPE_ID", account.AccountTypeId.ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "FILING_STATUS", ((int)account.OwnershipType).ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_DETAIL", account.AccountDetail == AccountDetail.SECURITY ? "Y" : "N");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "INTERNAL_MANAGED_YN", "N");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_NUMBER", account.AccountNumber);
+
+                }));
+
+                //Create Investor
+                configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                {
+                    cmd.CommandText = SqlConstants.CREATE_ACCOUNT_INVESTOR;
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "INVESTOR_ID", account.PrimaryOwnerId);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", newActId);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "OWNERSHIP_TYPE", "1");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "DATASOURCE_ID", dataSourceID);
+                }));
+
+                if (!string.IsNullOrEmpty(account.SecondaryOwnerId) && long.Parse(account.SecondaryOwnerId) > 0)
+                {
+                    //Create Secondary Investor
+                    configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                    {
+                        cmd.CommandText = SqlConstants.CREATE_ACCOUNT_INVESTOR;
+                        DatabaseWrapperHelper.AddInStringParameter(cmd,  "INVESTOR_ID", account.SecondaryOwnerId);
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", newActId);
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "OWNERSHIP_TYPE", "2");
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "DATASOURCE_ID", dataSourceID);
+                    }));                   
+                }                
+                configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                {
+                    cmd.CommandText = SqlConstants.CREATE_ACCOUNT_HOUSEHOLD;
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "HOUSEHOLD_ID", account.HouseholdId);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", newActId);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "DATASOURCE_ID", dataSourceID);
+                }));
+                bool result = _dbWrapper.ExecuteBatch(configureCommandList.ToArray(), _context.Identity.InstitutionId);
+            }
+            return newActId;
+        }
+        public AssetClassAccount GetAllAssetPositions()
+        {
+           List<OpenPosition> listOfPosition = new List<OpenPosition>();            
+            ACAccountAlgorithm acAccountBuilder = new ACAccountAlgorithm(_brokerMgrRepository);
+            return acAccountBuilder.Calculate(listOfPosition);
+        }
+
+        public bool DeleteAccount(string accountId)
+        {
+
+            var executeResult = _dbWrapper.ExecuteScalar(cmd =>
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = SqlConstants.DELETE_ACCOUNT;
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "a_vAccount_id", accountId);
+                DatabaseWrapperHelper.AddOutIntParameter(cmd, "A_UTSTATUS");
+                DatabaseWrapperHelper.AddOutStringParameter(cmd, "A_UTSTATUSMSG", 2000);
+            }, _context.Identity.InstitutionId);
+            return true;
+            
+        }
+
+        public bool SaveAssetAccountPositions(SaveAssetClassPositionsRequest account)
+        {
+            long lPositionID = -1;
+            long lTransactionID;
+            double dAmount;
+            double dBalance = account.Balance;
+            List<Action<IDbCommand>> configureCommandList = new List<Action<IDbCommand>>();
+            ////Update Cash
+            configureCommandList.Add(new Action<IDbCommand>(cmd =>
+            {
+                cmd.CommandText = SqlConstants.update_Account_CashBalance;
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountId);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "CASH_COMPONENT", "0");                
+            }));
+            //Delete All Transactions
+            configureCommandList.Add(new Action<IDbCommand>(cmd =>
+            {
+                cmd.CommandText = SqlConstants.deleteAllTransactions;
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountId);
+            }));
+            //Delete All Positions
+            configureCommandList.Add(new Action<IDbCommand>(cmd =>
+            {
+                cmd.CommandText = SqlConstants.deleteAllPositions;
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountId);
+            }));
+            foreach (SaveAssetClassPosition acPosition in account.ACPositions)
+            {
+                dAmount = (acPosition.Pct / 100.00) * dBalance;
+               // lPositionID = -1;
+                if (dAmount > 0)
+                {
+                    
+                        configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                        {
+                            lPositionID = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd1 =>
+                            {
+                                cmd1.CommandText = SqlConstants.getNewPositionID;
+                            }, _context.Identity.InstitutionId));
+                            dAmount = (acPosition.Pct / 100.00) * dBalance;
+                            cmd.CommandText = SqlConstants.createNewAccountPosition;
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountId);
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "POSITION_ID", lPositionID.ToString());
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "POSITION_TERM", ((long)PositionTerm.LONG).ToString());
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "QUANTITY", dAmount.ToString());
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "PURCHASE_PRICE", "1");
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "PURCHASE_DATE", DateTime.Now.ToString("MM/dd/yyyy"));
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "MKT_VAL_ENTRY_MODE", ((long)MarketValueEntry.MARKET_VALUE).ToString());
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "SEC_ID", acPosition.assetClass.SecId);
+                        }));
+                       
+                        if(lPositionID != -1)
+                        //Create Transaction - Web_Transaction
+                        configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                        {
+                            lTransactionID = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd1 =>
+                            {
+                                cmd1.CommandText = SqlConstants.getNewTransactionID;
+                            }, _context.Identity.InstitutionId));
+                            cmd.CommandText = SqlConstants.createNewAccountTransaction;
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "POSITION_ID", lPositionID.ToString());
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "TRANSACTION_ID", lTransactionID.ToString());
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "TRANSACTION_TYPE_ID", ((long)(TransactionType.BUY)).ToString());
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "PURCHASE_DATE", DateTime.Now.ToString("MM/dd/yyyy"));
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "PURCHASE_PRICE", "1");
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "QUANTITY", dAmount.ToString());
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "COMMISSION", "0");
+                        }));
+                    
+
+                }
+            }
+
+            bool result = _dbWrapper.ExecuteBatch(configureCommandList.ToArray(), _context.Identity.InstitutionId);
+            return result;
+
+        }
+
+        public  bool UpdateAccountBasicsInfo(AccountBasicInfoRequest account)
+        {
+            string dataSourceID = GetDataSourceID();
+            List<Action<IDbCommand>> configureCommandList = new List<Action<IDbCommand>>();
+            ////Update Cash
+            configureCommandList.Add(new Action<IDbCommand>(cmd =>
+            {
+                cmd.CommandText = SqlConstants.UPDATE_ACCOUNT_INFO;
+                DatabaseWrapperHelper.AddInStringParameter(cmd,"ACCOUNT_ID", account.AccountID);
+                DatabaseWrapperHelper.AddInStringParameter(cmd,"ACCOUNT_NAME", account.AccountName);
+                DatabaseWrapperHelper.AddInStringParameter(cmd,"TAX_TREATMENT", ((int)account.TaxTreatment).ToString());
+                DatabaseWrapperHelper.AddInStringParameter(cmd,"ACCOUNT_TYPE_ID", account.AccountTypeId.ToString());
+                DatabaseWrapperHelper.AddInStringParameter(cmd,"OWNERSHIP_TYPE", ((int)account.OwnershipType).ToString());
+                DatabaseWrapperHelper.AddInStringParameter(cmd,"ACCOUNT_NUMBER", account.AccountNumber);
+                //DatabaseWrapperHelper.AddInStringParameter(cmd,"CASH_COMPONENT", account.CashComponent.ToString());
+                //DatabaseWrapperHelper.AddInStringParameter(cmd,"BALANCE", account.MarketValue.ToString());
+            }));
+            //Delete investor
+            configureCommandList.Add(new Action<IDbCommand>(cmd =>
+            {
+                cmd.CommandText = SqlConstants.DELETE_INVESTOR;
+                DatabaseWrapperHelper.AddInStringParameter(cmd,"ACCOUNT_ID", account.AccountID);
+            }));
+            //Create investors
+            configureCommandList.Add(new Action<IDbCommand>(cmd =>
+            {
+                cmd.CommandText = SqlConstants.CREATE_ACCOUNT_INVESTOR;
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "INVESTOR_ID", account.PrimaryOwnerId);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountID);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "OWNERSHIP_TYPE", "1");
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "DATASOURCE_ID", dataSourceID);
+            }));
+
+            if (!string.IsNullOrEmpty(account.SecondaryOwnerId) && long.Parse(account.SecondaryOwnerId) > 0)
+            {
+                //Create Secondary Investor
+                configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                {
+                    cmd.CommandText = SqlConstants.CREATE_ACCOUNT_INVESTOR;
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "INVESTOR_ID", account.SecondaryOwnerId);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountID);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "OWNERSHIP_TYPE", "2");
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "DATASOURCE_ID", dataSourceID);
+                }));
+            }
+            
+            bool result = _dbWrapper.ExecuteBatch(configureCommandList.ToArray(), _context.Identity.InstitutionId);
+            return result;
+
+        }
+
+        private string GetDataSourceID()
+        {
+            return _brokerMgrRepository.IsBackOfficeInstitution() ? "2" : "1";
+        }
+
+
+        public bool SaveSeurityAccountPositions(SaveSecurityPositionsRequest account)
+        {
+            long lPositionID = -1;
+            long lTransactionID = -1;
+            List<Action<IDbCommand>> configureCommandList = new List<Action<IDbCommand>>();
+
+            configureCommandList.Add(new Action<IDbCommand>(cmd =>
+            {
+                cmd.CommandText = SqlConstants.update_Account_CashBalance;
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountID);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "CASH_COMPONENT", account.CashComponent.ToString());
+            }));
+            //Delete All Transactions
+            configureCommandList.Add(new Action<IDbCommand>(cmd =>
+            {
+                cmd.CommandText = SqlConstants.deleteAllTransactions;
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountID);
+            }));
+            //Delete All Positions
+            configureCommandList.Add(new Action<IDbCommand>(cmd =>
+            {
+                cmd.CommandText = SqlConstants.deleteAllPositions;
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountID);
+            }));
+            foreach (SaveSecurityPosition pos in account.Positions)
+            {
+                //Create Position - Web_Position
+                configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                {
+                    lPositionID = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd1 =>
+                    {
+                        cmd1.CommandText = SqlConstants.getNewPositionID;
+                    }, _context.Identity.InstitutionId));
+                    //dAmount = (acPosition.Pct / 100.00) * dBalance;
+                    cmd.CommandText = SqlConstants.createNewAccountPosition;
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "ACCOUNT_ID", account.AccountID);
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "POSITION_ID", lPositionID.ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "POSITION_TERM", ((long)pos.PositionTerm).ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "QUANTITY", pos.Qty.ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "PURCHASE_PRICE", pos.CurrentPrice.ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "PURCHASE_DATE", pos.OpenDate.ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "MKT_VAL_ENTRY_MODE", ((long)pos.Marketalue_entry_mode).ToString());
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "SEC_ID", pos.SecID);
+                }));
+
+
+
+                //Create Transaction - Web_Transaction
+                if (lPositionID != -1)
+                {
+                    //Create Transaction - Web_Transaction
+                    configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                    {
+                        lTransactionID = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd1 =>
+                        {
+                            cmd1.CommandText = SqlConstants.getNewTransactionID;
+                        }, _context.Identity.InstitutionId));
+                        cmd.CommandText = SqlConstants.createNewAccountTransaction;
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "POSITION_ID", lPositionID.ToString());
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "TRANSACTION_ID", lTransactionID.ToString());
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "TRANSACTION_TYPE_ID", ((long)(pos.PositionTerm)).ToString());
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "PURCHASE_DATE", pos.OpenDate);
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "PURCHASE_PRICE", pos.CurrentPrice.ToString());
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "QUANTITY", pos.Qty.ToString());
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "COMMISSION", pos.Commissions.ToString());
+                    }));
+                }
+            }
+
+            bool result = _dbWrapper.ExecuteBatch(configureCommandList.ToArray(), _context.Identity.InstitutionId);
+            return result;
+
+        }
+                   
+             
+            
+
+            
+           
+
+
 
     }
 }

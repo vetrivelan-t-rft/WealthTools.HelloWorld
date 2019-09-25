@@ -12,5 +12,6 @@ namespace WealthTools.Library.BrokerManager
     }
     public class Constants
     {
+        public const int IDS_BACKOFFICE_CONFIG_ID = 2;
     }
 }

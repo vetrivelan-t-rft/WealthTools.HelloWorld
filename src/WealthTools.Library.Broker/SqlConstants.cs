@@ -20,5 +20,14 @@ namespace WealthTools.Library.BrokerManager
 			WHERE 
 			 WUS.USER_ID= WBR.BROKER_ID AND 
 			BROKER_ID=:broker_id";
+
+        public const string GET_INSTITUTION_CONFIG = @"select VALUE from  web_inst_setting 
+                                                       where INSTITUTION_ID =:InstitutionId and INST_SETTING_TYPE_ID = 1";
+
+        public const string GET_AC_VIEW_ID = @"SELECT wav.ac_view_id,wav.most_gran_yn FROM web_group_inv_profile wgip,web_inv_profile_config wipc,web_ac_view wav
+                                        WHERE wgip.inv_profile_config_id = wipc.inv_profile_config_id
+                                          AND wipc.ac_view_set_id = wav.ac_view_set_id
+                                          AND wgip.group_id =:group_id";
+
     }
 }

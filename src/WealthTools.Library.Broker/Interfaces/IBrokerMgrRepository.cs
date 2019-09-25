@@ -8,6 +8,9 @@ namespace WealthTools.Library.BrokerManager.Interfaces
     public interface IBrokerMgrRepository
     {
         Broker GetBrokerInfo();
+        bool IsBackOfficeInstitution();
+
+        List<AssetClass> GetAssetClassification(bool broadAssetClass);
 
 
     }

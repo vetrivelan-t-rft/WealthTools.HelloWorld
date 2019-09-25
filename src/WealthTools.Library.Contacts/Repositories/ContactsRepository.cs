@@ -23,9 +23,9 @@ namespace WealthTools.Library.Contacts.Repositories
             _context = context;            
         }        
 
-        public List<SearchResult> SearchAllContacts(SearchParameters searchParameters)
+        public List<Household> SearchAllContacts(SearchParameters searchParameters)
         {
-            List<SearchResult> resultList = new List<SearchResult>();
+            List<Household> resultList = new List<Household>();
             IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
             {
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -54,7 +54,7 @@ namespace WealthTools.Library.Contacts.Repositories
             }, _context.Identity.InstitutionId);
             foreach (var row in records)
             {
-                SearchResult result = new SearchResult();
+                Household result = new Household();
                 result.HouseholdID = row["HOUSEHOLD_ID"].ToString();                
                 if (!String.IsNullOrEmpty(result.HouseholdID) && Convert.ToInt32(result.HouseholdID) > 0 && !resultList.Any(p => p.HouseholdID == result.HouseholdID))
                 {
@@ -102,13 +102,11 @@ namespace WealthTools.Library.Contacts.Repositories
             return contactList;
         }
 
-        public SearchResult CreateProspectHousehold(List<Contact> contactsListColl)
+        public Household CreateProspectHousehold(List<Contact> contactsListColl)
         {
-            //if (_isBackOffice)
-            //    household = hhManager.CreateHouseholdForTeams(context, household, null, null, null);
-            //else
-            //    household = hhManager.CreateHouseholdForBroker(context, brokerCol, household);
-            SearchResult res =  CreateHousehold(contactsListColl);
+            Household res =  CreateHousehold(contactsListColl);
+            List<Team> teams = GetHouseHoldTeams(res.HouseholdID);
+            UpdateTeamsForHousehold(res.HouseholdID, teams);
             InsertAllATTR2IntoHH(res.HouseholdID);
             foreach (Contact contact in res.Persons)
             {
@@ -124,11 +122,11 @@ namespace WealthTools.Library.Contacts.Repositories
         {
             DatabaseWrapperHelper.AddInLongParameter(cmd, "A_NBROKER_ID", _context.Identity.BrokerId);
             DatabaseWrapperHelper.AddInIntParameter(cmd, "A_NSTARTROW", searchParameters.StartRow);
-            DatabaseWrapperHelper.AddInIntParameter(cmd, "A_NCOUNT", searchParameters.Count);
+            DatabaseWrapperHelper.AddInIntParameter(cmd, "A_NCOUNT", searchParameters.Count.ToString());
             DatabaseWrapperHelper.AddInStringParameter(cmd, "A_NSORTBYCOL", "");
             DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VASC_YN", (searchParameters.IsSortAsc) ? "Y" : "N");
             DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VTOTCNTONLY_YN",  "N");
-            DatabaseWrapperHelper.AddInStringParameter(cmd, "A_SUPPACCT",  "N");
+            DatabaseWrapperHelper.AddInStringParameter(cmd, "A_SUPPACCT",  "Y");
         }
 
         private void SetDemographicParameters(IDbCommand cmd, SearchParameters searchParameters)
@@ -139,6 +137,7 @@ namespace WealthTools.Library.Contacts.Repositories
             DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VCITY", HandleSpecialCharacters(searchParameters.City));
             DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VSTATE", HandleSpecialCharacters(searchParameters.State));
             DatabaseWrapperHelper.AddInStringParameter(cmd, "A_VZIP", HandleSpecialCharacters(searchParameters.Zip));
+            DatabaseWrapperHelper.AddInStringParameter(cmd, "a_HouseholdLevel", "Y");
 
         }
 
@@ -153,13 +152,13 @@ namespace WealthTools.Library.Contacts.Repositories
         }
 
         //CreateHouseholdForTeams
-        private SearchResult CreateHousehold(List<Contact> contacts)
+        private Household CreateHousehold(List<Contact> contacts)
         {
-            SearchResult result = new SearchResult();
+            Household result = new Household();
             Dictionary<long, long> contactDic = new Dictionary<long, long>();
             string hhName = "Client Household";
             //Get next householdid
-            int householdId = Convert.ToInt32(_dbWrapper.ExecuteScalar(cmd =>
+            long householdId = Convert.ToInt64(_dbWrapper.ExecuteScalar(cmd =>
             {
                 cmd.CommandText = SqlConstants.GET_NEXT_SEQUENCE_HOUSEHOLDID;
             }, _context.Identity.InstitutionId));           
@@ -202,13 +201,7 @@ namespace WealthTools.Library.Contacts.Repositories
             int investorId = Convert.ToInt32(_dbWrapper.ExecuteScalar(cmd =>
             {
                 cmd.CommandText = SqlConstants.GET_NEXT_SEQUENCE_INVESTORID;
-            }, _context.Identity.InstitutionId));           
-
-            // temp solution : NFS data is longer than 30 bytes
-            //if (newCt.FirstName.Length > 30)
-            //    newCt.FirstName = newCt.FirstName.Substring(0, 30);
-            //if (newCt.LastName.Length > 30)
-            //    newCt.LastName = newCt.LastName.Substring(0, 30);
+            }, _context.Identity.InstitutionId));          
 
             var executeResult = _dbWrapper.Execute(cmd =>
             {
@@ -285,20 +278,18 @@ namespace WealthTools.Library.Contacts.Repositories
         public void InsertAllATTR2IntoHH( string householdId)
         {
             DeleteAllATTR2FromHH( householdId);
-             string insertSQL = @"insert into web_household_qry_filter(household_id, filter_token, user_entered_yn)(select wth.household_Id, wt.team_id, decode(wth.team_assign_type_id, 3, 'Y', 'N') from web_team_x_household wth, web_team wt where wth.team_id = wt.team_id and wt.team_hierarchy_type_id = 3 and wth.household_id = :householdId)";
             var executeResult = _dbWrapper.Execute(cmd =>
             {
-                cmd.CommandText = insertSQL;
+                cmd.CommandText = SqlConstants.CREATE_WEB_HOUSEHOLD_QRY_FILTER;
                 DatabaseWrapperHelper.AddInIntParameter(cmd, "householdId", householdId.ToString());
             }, _context.Identity.InstitutionId);
         }
 
         private void DeleteAllATTR2FromHH( string householdId)
         {
-            string DeleteSQL = @"DELETE FROM WEB_HOUSEHOLD_QRY_FILTER WHERE HOUSEHOLD_ID = :householdId";
             var executeResult = _dbWrapper.Execute(cmd =>
             {
-                cmd.CommandText = DeleteSQL;
+                cmd.CommandText = SqlConstants.DELETE_WEB_HOUSEHOLD_QRY_FILTER;
                 DatabaseWrapperHelper.AddInIntParameter(cmd, "householdId", householdId.ToString());
              }, _context.Identity.InstitutionId);
             
@@ -319,71 +310,229 @@ namespace WealthTools.Library.Contacts.Repositories
            
         }
 
-        //public TeamList GetHouseHoldTeams(int instId, long brokerId, string planId, string householdId)
-        //{
-        //    long _planId = -1;
-        //    int _householdId = -1;
-        //    TeamList teamList = null;
-        //    string cacheKey = string.Format("{0}{1}{2}", planId, brokerId, householdId);
-        //    if ((teamList = (TeamList)this.GetCachedObject(cacheKey)) != null) return teamList;
-        //    teamList = new TeamList();
-        //    //if household id is not empty then get it 
-        //    if (householdId != string.Empty)
-        //        _householdId = Int32.Parse(householdId);
+        public bool IsBackOfficeInstitution()
+        {
+            int configId = Convert.ToInt32(_dbWrapper.ExecuteScalar(cmd =>
+            {
+                cmd.CommandText = SqlConstants.GET_INSTITUTION_CONFIG;
+                DatabaseWrapperHelper.AddInIntParameter(cmd, "InstitutionId",  _context.Identity.InstitutionId);                
+            }, _context.Identity.InstitutionId));
+            return configId == Constants.IDS_BACKOFFICE_CONFIG_ID;
+        }
 
-        //    if (planId != string.Empty)
-        //        _planId = Int32.Parse(planId);
+        public List<Team> GetHouseHoldTeams(string householdId)
+        {
+            List<Team> teamList = new List<Team>();
+            //get household teams only for backoffice institution
+            if (IsBackOfficeInstitution())
+            {
+                IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
+                {
+                    cmd.CommandText = SqlConstants.GET_HOUSEHOLD_TEAMS;
+                    DatabaseWrapperHelper.AddInLongParameter(cmd, "hierarchyType", "3");
+                    DatabaseWrapperHelper.AddInLongParameter(cmd, "household_id", householdId);
+                }, _context.Identity.InstitutionId);
+                foreach (var row in records)
+                {
+                    Team team = new Team();
+                    team.TeamId = row["TEAM_ID"].ToString();
+                    team.RepCode = row["REP_CODE"].ToString();
+                    team.Name = row["NAME"].ToString();
+                    team.Role = (Team.TeamRole)(Convert.ToInt64(row["TEAM_ROLE_ID"]));
+                    team.AssignType = (Team.TeamAssignmentType)(Convert.ToInt64(row["TEAM_ASSIGN_TYPE_ID"]));
+                    team.HierarchyType = (Team.TeamHierarchyType)(Convert.ToInt64(row["TEAM_HIERARCHY_TYPE_ID"]));
+                    teamList.Add(team);
+                }
+            }
+            if (teamList.Count == 0)
+            {
+                IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
+                {
+                    cmd.CommandText = SqlConstants.GET_DEFAULT_TEAMS;
+                    DatabaseWrapperHelper.AddInLongParameter(cmd, "brokerId", _context.Identity.BrokerId);
+                   
+                }, _context.Identity.InstitutionId);
+                foreach (var row in records)
+                {
+                    Team team = new Team();
+                    team.Broker_ID = row["BROKER_ID"].ToString();
+                    team.TeamId = row["TEAM_ID"].ToString();
+                    team.RepCode = row["REP_CODE"].ToString();
+                    team.Name = row["NAME"].ToString();
+                    //team.City = row["CITY"].ToString();
+                    //team.State = row["STATE"].ToString();
+                    team.Role = (Team.TeamRole)(Convert.ToInt64(row["TEAM_ROLE_ID"]));
+                    team.AssignType = Team.TeamAssignmentType.UserCreated;
+                    team.HierarchyType = (Team.TeamHierarchyType)(Convert.ToInt64(row["TEAM_HIERARCHY_TYPE_ID"]));
+                    teamList.Add(team);
+                }
+            }
+                return teamList;
+        }
+        public void UpdateTeamsForHousehold(string householdId, List<Team> listOfTeam)
+        {
+            if (listOfTeam != null && listOfTeam.Count > 0)
+            {
+                List<Team> finalHHTeams = CalculateListOfTeams(householdId, listOfTeam);
 
-        //    //if household id is null try to get from plan id
-        //    if (householdId == "")
-        //    {
-        //        if (_planId > 0)
-        //        {
-        //            _householdId = (int)(ContactServiceDataGateway.GetPartyId(_context, _planId));
-        //        }
-        //    }
+                List<Action<IDbCommand>> configureCommandList = new List<Action<IDbCommand>>();
+                configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                {
+                    cmd.CommandText = SqlConstants.DELETE_TeamEntitlement;
+                    DatabaseWrapperHelper.AddInStringParameter(cmd, "householdId", householdId);
+                }));
 
-        //    AppConfigSvc _svc = new AppConfigSvc(this._context);
-        //    bool _isBackOffice = _svc.IsBackOffice(instId);
+                bool containsPrimary = false;
+                foreach (Team team in listOfTeam)
+                {
+                    if (team.Role == Team.TeamRole.Primary && (int)team.AssignType != 0)
+                    {
+                        if (!containsPrimary)
+                            containsPrimary = true;
+                        else
+                            team.Role = Team.TeamRole.Secondary;
+                    }
+                    configureCommandList.Add(new Action<IDbCommand>(cmd =>
+                    {
+                        cmd.CommandText = team.AssignType != Team.TeamAssignmentType.UnKnown ? SqlConstants.CREATE_TEAM_ENTITLEMENT : SqlConstants.CREATE_TEAM_ENTITLEMENT_ASSIGNTYPE_0;
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "teamId", team.TeamId);
+                        DatabaseWrapperHelper.AddInStringParameter(cmd, "householdId", householdId);
+                        if (team.AssignType != Team.TeamAssignmentType.UnKnown)
+                        {
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "teamRole", ((int)team.Role).ToString());
+                            DatabaseWrapperHelper.AddInStringParameter(cmd, "teamAssignmentType", ((int)team.AssignType).ToString());
+                        }
+                    }));
+                }
+                bool result = _dbWrapper.ExecuteBatch(configureCommandList.ToArray(), _context.Identity.InstitutionId);
 
-        //    //get household teams only for backoffice institution
-        //    if (_isBackOffice)
-        //    {
-        //        //if household id not present return as it means its new household
-        //        if (_householdId != -1)
-        //        {
-        //            Thomson.Financial.Book.BusinessObjects.BrokerType brokerTYpe = ContactServiceDataGateway.GetBrokerTypeId(_context);
+            }
+        }
 
-        //            TeamCollection teams = (new ho.HouseholdManager()).GetHouseholdTeams(this._context, brokerId, _householdId);
+        private  List<Team> CalculateListOfTeams(string householdId, List<Team> listOfTeams)
+        {
+            List<Team> lstExistingTeams = new List<Team>(), lstFinalTeams = new List<Team>();
 
-        //            if (teams != null)
-        //            {
-        //                foreach (bo.Team boTeam in teams)
-        //                {
-        //                    teamList.Add(boTeam);
-        //                }
-        //            }
-        //        }
+            IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
+            {
+                cmd.CommandText = SqlConstants.GET_HOUSEHOLD_TeamEntitlement;
+                DatabaseWrapperHelper.AddInLongParameter(cmd, "householdId", householdId);
 
-        //        if (teamList.Count == 0)
-        //        {
-        //            Thomson.Financial.Book.BusinessObjects.BrokerType brokerType = ContactServiceDataGateway.GetBrokerTypeId(_context);
+            }, _context.Identity.InstitutionId);
+            foreach (var row in records)
+            {
+                Team team = new Team();
+                team.TeamId = row["TEAM_ID"].ToString();
+                team.Role = (Team.TeamRole)(Convert.ToInt64(row["TEAM_ROLE_ID"]));
+                team.AssignType = (Team.TeamAssignmentType)(Convert.ToInt64(row["TEAM_ASSIGN_TYPE_ID"]));
+                lstExistingTeams.Add(team);
+            }
 
-        //            TeamCollection teams = (new Thomson.Financial.Service.BrokerService.BrokerManager()).GetBrokerTeamsForPreferences(this._context, brokerId, brokerType, 301);
+            List<Team> tc = GetParentTeams( listOfTeams);
+            if (tc != null)
+            {
+                foreach (Team t in tc)
+                {
+                    listOfTeams.Add(t);
+                }
+            }
 
-        //            if (teams != null)
-        //            {
-        //                foreach (bo.Team boTeam in teams)
-        //                {
-        //                    teamList.Add(boTeam);
-        //                }
-        //            }
+            if (lstExistingTeams == null) return listOfTeams;
 
-        //        }
-        //    }
-        //    this.AddCachedObject(cacheKey, teamList);
-        //    return teamList;
-        //}
+            if (listOfTeams != null)
+            {
+                //need to take care of user created team removed from UI case.
+                foreach (Team oldTeam in lstExistingTeams)
+                {
+                    bool isExist = false;
+                    foreach (Team newTeam in listOfTeams)
+                    {
+                        if (newTeam.TeamId == oldTeam.TeamId)
+                        {
+                            isExist = true;
+                            lstFinalTeams.Add(newTeam);
+                            break;
+                        }
+                    }
+                }
+                foreach (Team newTm in listOfTeams)
+                {
+                    bool isExist = false;
+                    foreach (Team oldTm in lstExistingTeams)
+                    {
+                        if (oldTm.TeamId == newTm.TeamId)
+                        {
+                            isExist = true;
+                            break;
+                        }
+                    }
+                    if (!isExist)
+                    {
+                        lstFinalTeams.Add(newTm);
+                    }
+                }
+            }
 
+                    
+            return lstFinalTeams;
+        }
+
+        private  List<Team> GetParentTeams(List<Team> listOfTeam)
+        {
+            List<Team> parentTeams = new List<Team>();
+            if (listOfTeam.Count == 0) return null;
+            List<string> teamIDList = new List<string>();
+            foreach(Team team in listOfTeam)
+            {
+                teamIDList.Add(team.TeamId);
+            }
+            string sql = SqlConstants.GET_Parent_Teams;
+            sql = _dbWrapper.BuildSqlInClauseQuery(teamIDList, ":TEAM_IDS", sql);
+            IEnumerable<IDataRecord> records = _dbWrapper.QueryDataRecord(cmd =>
+            {
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandText = sql;
+                _dbWrapper.BuildParamInClauseQuery(teamIDList, "TEAM_IDS", cmd);                
+            }, _context.Identity.InstitutionId);
+            foreach (var row in records)
+            {
+                Team team = new Team();
+                team.TeamId = row["TEAM_ID"].ToString();
+                team.RepCode = row["REP_CODE"].ToString();
+                team.Name = row["NAME"].ToString();
+                team.Role = (Team.TeamRole)(Convert.ToInt64(row["TEAM_ROLE_ID"]));
+                team.AssignType = (Team.TeamAssignmentType)(Convert.ToInt64(row["TEAM_ASSIGN_TYPE_ID"]));
+                team.HierarchyType = (Team.TeamHierarchyType)(Convert.ToInt64(row["TEAM_HIERARCHY_TYPE_ID"]));
+                parentTeams.Add(team);
+            }
+            return parentTeams;
+        }
+
+        public bool UpdateContact(Contact contact)
+        {
+            int executeResult = _dbWrapper.Execute(cmd =>
+            {
+                cmd.CommandText = SqlConstants.UPDATE_CONTACT;
+                DatabaseWrapperHelper.AddInLongParameter(cmd, "INVESTOR_ID", contact.InvestorId);           
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "FIRST_NAME", contact.FirstName);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "MID_INITIAL", contact.MiddleName);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "LAST_NAME", contact.LastName);               
+                //Home and Mail correspondence
+                DatabaseWrapperHelper.AddInStringParameter(cmd, ":EMAIL_ADDR", contact.PersonalEmail);
+                //Home and Mail Address
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "HOME_ADDR1", contact.AddressLine1);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "HOME_ADDR2", contact.AddressLine2);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "HOME_CITY", contact.City);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "HOME_STATE", contact.State);
+                DatabaseWrapperHelper.AddInStringParameter(cmd, "HOME_POSTAL_CODE", contact.Zip);
+            }, _context.Identity.InstitutionId);
+
+            
+            if (executeResult > 0)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

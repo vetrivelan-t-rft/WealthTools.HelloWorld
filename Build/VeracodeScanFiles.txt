@@ -1,0 +1,12 @@
+WealthTools.Library.Accounts.dll
+WealthTools.Library.BrokerManager.dll
+WealthTools.Library.Proposals.dll
+WealthTools.Library.ReportFramework.dll
+WealthTools.Library.Reports.dll
+WealthTools.Middleware.Usage.dll
+WealthTools.WebAPI.Proposals.dll
+WealthTools.Library.Accounts.pdb
+WealthTools.Library.BrokerManager.pdb
+WealthTools.Library.Proposals.pdb
+WealthTools.Library.Reports.pdb
+WealthTools.WebAPI.Proposals.pdb

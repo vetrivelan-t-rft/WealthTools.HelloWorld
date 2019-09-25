@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using WealthTools.Common.UnitTests.Utils;
 using WealthTools.Library.BrokerManager.Interfaces;
 using WealthTools.Library.BrokerManager.Models;
@@ -33,6 +34,30 @@ namespace WealthTools.Library.BrokerManager.Tests
             Broker broker = _brokerMgrRepository.GetBrokerInfo();
 
             Assert.NotNull(broker);
+        }
+
+        [Fact]
+        public void IsBackOfficeTest()
+        {
+            bool result = _brokerMgrRepository.IsBackOfficeInstitution();
+
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void GetAssetClassification()
+        {
+            List<AssetClass> result = _brokerMgrRepository.GetAssetClassification(false);
+
+            Assert.True(result.Count > 0);
+        }
+
+        [Fact]
+        public void GetAssetClassificationBroadAssetClass()
+        {
+            List<AssetClass> result = _brokerMgrRepository.GetAssetClassification(false);
+
+            Assert.True(result.Count > 0);
         }
     }
 }
