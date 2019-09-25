@@ -17,7 +17,7 @@ pipeline {
                     description: 'Run a Full Build of the application. Includes Veracode, Black Duck, SonarQube and marking a package as Release Ready')
         }
 
-        environment {
+      /*  environment {
 
             //User Controlled Variables
             ASPNETCORE_ENVIRONMENT = 'Development'
@@ -71,7 +71,7 @@ pipeline {
             HasTests = "${pipelineParams.HasTests}";
 
 
-        }
+        } */
 
       /*  triggers {
         gitlab(triggerOnPush: true, triggerOnMergeRequest: true)
