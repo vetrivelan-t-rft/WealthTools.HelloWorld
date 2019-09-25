@@ -112,7 +112,7 @@ pipeline {
 				echo " ***************************************************************** "
 				script {
 
-					dir("${env.WORKSPACE}") {
+					dir("${env.WORKSPACE}\\Test") {
 
 						//  UnitTestDotNet("${WORKSPACE}", "${WORKSPACE}\\report")
 						powershell 'dotnet test  /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="..\\\\report\\\\result.xml"   /p:Include="[WealthTools.*]*"'
