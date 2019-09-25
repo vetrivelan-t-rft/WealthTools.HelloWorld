@@ -16,6 +16,9 @@ pipeline {
                     name: 'BLACKDUCK_BUILD',
                     description: 'Run a Full Build of the application. Includes Veracode, Black Duck, SonarQube and marking a package as Release Ready')
         }
+        environment {
+        FULLVERSION = "0.0.${BUILD_NUMBER}"
+        }
 
       /*  environment {
 
@@ -45,7 +48,7 @@ pipeline {
             ZIP_WORKSPACE = "${WORKSPACE}"
             APP_NAME = "${pipelineParams.APP_NAME }"
             VERACODE_COMPONENTNAME = "${pipelineParams.COMPONENTNAME}".replace(".", "")
-            FULLVERSION = "${MAJORVERSION}.${BUILD_NUMBER}"
+            FULLVERSION = "0.0.${BUILD_NUMBER}"
             VERACODE_COMPONENTNAME_EXE = "${VERACODE_COMPONENTNAME}" + '.exe'
             VERACODE_API_KEY = credentials('Veracode_API_SEN_KEY')
 
@@ -79,7 +82,7 @@ pipeline {
 
         stages {
 
-           stage('Pre-Build') {
+           stage('Clone') {
                 steps {
                     parallel(
                             Jenkins: {
@@ -89,7 +92,14 @@ pipeline {
                             }
                     ) // end parallel
                 } // end steps
-            } // end Pre-Build
+            } // end Clone
+                
+            stage('Build') {
+                steps {
+                    //Build all the projects
+                   powershell 'dotnet build  -p:Version=$env:FULLVERSION -c Release'
+                }
+            }
 
         }//end of stages
 
