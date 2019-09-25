@@ -100,76 +100,32 @@ pipeline {
                    powershell 'dotnet build  -p:Version=$env:FULLVERSION -c Release'
                 }
             }
-          stage('unit test') {
-              /*  when {
-                    anyOf { branch 'develop'; branch 'master'}
-                    expression {
-                         HasTests == 'true'
-                    }
-                } */
-                steps {
-                script {
-                try {
-                    echo " *****************************************************************"
-                    echo "                   UNIT TEST ENABLED : ${HasTests} -- ${TEST_PROJECT_DIR} "
-                    echo " ***************************************************************** "
-                    script {
-                        echo " Unit test enabled : HasTests , ${HasTests}"
-                        dir("${env.WORKSPACE}") {
-                            echo " *****************************************************************"
-                            echo "         Cobertura CodeCoverge Started...."
-                            echo " *****************************************************************"
-                            powershell '''
-                                $Folders= Get-ChildItem -Path "$env:WORKSPACE\\Test" -Directory -Force -ErrorAction SilentlyContinue
-                                foreach ($Folder in $Folders) {
-                                $Name=$Folder.Name
-                                Set-Location $env:WORKSPACE\\Test\\$Name
-                                powershell 'dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude="[xunit.*]*"'
-                                }
-                                set-location $env:WORKSPACE\\Test 
-                           '''
-                            echo " *****************************************************************"
-                            echo "         Publlish Cobertura Codecoverage to Jenkins"
-                            echo " *****************************************************************"
-                           cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**\\coverage.cobertura.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
-                        }
-                        dir("${env.WORKSPACE}") {
-                            echo " *****************************************************************"
-                            echo "        OpenCover CodeCoverge Started...."
-                            echo " *****************************************************************"
-                            powershell '''
-                                $Folders= Get-ChildItem -Path "$env:WORKSPACE\\Test" -Directory -Force -ErrorAction SilentlyContinue
-                                foreach ($Folder in $Folders) {
-                                $Name=$Folder.Name
-                                Set-Location $env:WORKSPACE\\Test\\$Name
-                                powershell 'dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:Exclude="[xunit.*]*"'
-                                }
-                                set-location $env:WORKSPACE\\Test 
-                           '''
-                        }                        
-                        dir("${env.WORKSPACE}") {
-                            powershell 'dotnet test  /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="..\\..\\\\report\\\\result.json"   /p:Include="[WealthTools.*]*"'
-                            echo " *****************************************************************"
-                            echo "         Unit TestCase started....."
-                            echo " ***************************************************************** "
-                            bat returnStatus: true, script: "dotnet test --logger \"trx;LogFileName=unit_tests.xml\" --no-build"
-                        }
-                        }
-                    }  
-                    finally {
-                        script {
-                        dir("${env.WORKSPACE}")
-                        {
-                        echo " *****************************************************************"
-                        echo       "Publish Unittest results to Jenkins"
-                        echo " ***************************************************************** "
-					    step([$class: 'MSTestPublisher', testResultsFile:"**\\TestResults\\unit_tests.xml", failOnError: true, keepLongStdio: true])
-                                }
-                            }
-                        }
-                    }
-                }
-            } 
+           stage('unit test') {
+               /*  when {
+                    branch 'Develop'
+                }*/
+
+			steps {
+
+				echo " *****************************************************************"
+				echo "                   UNIT TEST ENABLED STARTED "
+				echo " ***************************************************************** "
+				script {
+
+					dir("${env.WORKSPACE}") {
+
+						//  UnitTestDotNet("${WORKSPACE}", "${WORKSPACE}\\report")
+						powershell 'dotnet test  /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="..\\\\report\\\\result.xml"   /p:Include="[WealthTools.*]*"'
+						powershell 'dotnet test  /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="..\\\\report\\\\result.json"   /p:Include="[WealthTools.*]*"'
+						// powershell 'dotnet test  .\\Refinitiv.Wave.Tests /p:CollectCoverage=true /p:CoverletOutputFormat=opencover"'
+					}
+					dir("${WORKSPACE}\\report")
+					{
+						cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'result.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
+					}
+				}
+			}
+		} 
 
         }//end of stages
 
