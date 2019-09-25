@@ -1,0 +1,23 @@
+<Project ToolsVersion="4.7.1" DefaultTargets="BuildAndCopy" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="C:\Program Files (x86)\MSBuild\14.0\bin\Microsoft.Common.CurrentVersion.targets" />
+	<Import Project="C:\Program Files (x86)\MSBuild\14.0\Bin\Microsoft.Common.tasks"/>
+	<Import Project="C:\Program Files (x86)\MSBuild\Microsoft\VisualStudio\v14.0\WebApplications\Microsoft.WebApplication.targets"/>
+   	<Import Project="C:\Program Files (x86)\MSBuild\ExtensionPack\4.0\MSBuild.ExtensionPack.tasks"/>
+	 
+	<PropertyGroup>
+		<SolutionRoot>$(SolutionFolder)</SolutionRoot>
+
+    </PropertyGroup>
+
+	<Target Name="BuildAndCopy" DependsOnTargets="Publish">
+		<Message Text="+++++++++++++++++++++++++++++++++++++++++" /> 
+		<Message Text="Package created successfully" />
+		<Message Text="+++++++++++++++++++++++++++++++++++++++++" /> 
+	</Target>	
+    
+    <Target Name="Publish" >
+        <Message Text="Running Publish" />
+        <Exec WorkingDirectory="$(BuildDir)" Command="choco pack  ./pack/logger/logger.nuspec --version $(version) --outputdirectory ./dist/nupkg" LogStandardErrorAsError="true"/>
+        <Message Text="Publish Complete" />
+    </Target>
+</Project>
