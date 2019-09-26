@@ -30,7 +30,7 @@ pipeline {
 				BAMS_CREDS = credentials('s.tr.wmbot_BAMS_AWS_APIKEY')
 				CONFIGSDIR = "D://Temp//Choco"
 				BLACK_DUCK_API_KEY= credentials('BLACK_DUCK_API_KEY')
-				MS_TEAM_WEBHOOK = "${pipelineParams.MS_TEAM_WEBHOOK}"
+				MS_TEAM_WEBHOOK = "https://outlook.office.com/webhook/61080308-7395-46af-bb0f-1f25fbda6031@71ad2f62-61e2-44fc-9e85-86c2827f6de9/JenkinsCI/e516048a0bb44cbea04e53e2eeaf0fe2/1a737938-56f9-4055-85a1-7fb6cf96dc5f"
         }
 
       /*  triggers {
