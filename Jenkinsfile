@@ -24,6 +24,7 @@ pipeline {
 	PROJECT_NAME = "WealthTools.WebAPI.Proposals"
 	BAMSURI = "https://bams-aws.refinitiv.com/artifactory/api/nuget/default.nuget.cloud/nawm/${COMPONENTGROUP}/${COMPONENTNAME}/"
 	BAMS_CREDS = credentials('s.tr.wmbot_BAMS_AWS_APIKEY')
+	CONFIGSDIR = "D://Temp//Choco"
         }
 
       /*  environment {
@@ -255,7 +256,7 @@ pipeline {
                         script {
                             powershell '''
                              try {
-        
+        			   robocopy  "$env:CONFIGSDIR\\tools" "$env:WORKSPACE\\build\\tools" chocolateyinstall.ps1
                                     $apiKey = "s.tr.wmbot:$env:BAMS_CREDS"
                                     if($env:FULL_BUILD -eq "true") {
                                     $nupkgName = "$env:COMPONENTNAME.$env:FULLVERSION.nupkg"
