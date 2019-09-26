@@ -25,6 +25,7 @@ pipeline {
 	BAMSURI = "https://bams-aws.refinitiv.com/artifactory/api/nuget/default.nuget.cloud/nawm/${COMPONENTGROUP}/${COMPONENTNAME}/"
 	BAMS_CREDS = credentials('s.tr.wmbot_BAMS_AWS_APIKEY')
 	CONFIGSDIR = "D://Temp//Choco"
+	BLACK_DUCK_API_KEY= credentials('BLACK_DUCK_API_KEY')
         }
 
       /*  environment {
