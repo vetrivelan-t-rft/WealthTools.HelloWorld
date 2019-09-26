@@ -18,6 +18,9 @@ pipeline {
         }
         environment {
         FULLVERSION = "0.0.${BUILD_NUMBER}"
+	COMPONENTNAME = "proposal_api"
+            //The product type is used to group products together in directories as well as assist in deployments
+        COMPONENTGROUP = "WM-ServiceBureau"
         }
 
       /*  environment {
@@ -169,7 +172,28 @@ pipeline {
                     }
                 }
             }  
+	stage('Scanners') {
+		parallel {
+		stage('SonarQube') {
+		steps {
+		println "Scanners - SonarQube"
+		withSonarQubeEnv('SonarQube AWS Server') {
+		bat '''
+        sonar-scanner -Dsonar.login=%SONAR_AUTH_TOKEN% -Dsonar.host.url=%SONAR_HOST_URL%^
+ -Dsonar.projectKey="NAWM_%COMPONENTGROUP%_%COMPONENTNAME%" -Dsonar.projectName="NAWM_%COMPONENTNAME%" -Dsonar.projectVersion=%FULLVERSION%^
+ -Dsonar.projectBaseDir="%WORKSPACE%" -Dsonar.home="%WORKSPACE%"^
+ -Dsonar.sourceEncoding=UTF-8^
+ -Dsonar.exclusions="**\\bin\\**,**\\obj\\**"^
+ -Dsonar.sources="%WORKSPACE%\\src%"  -Dsonar.verbose=true^
+ -Dsonar.cs.opencover.reportsPaths="%WORKSPACE%\\Test\\**\\coverage.opencover.xml"^ 
+ -Dsonar.cs.vstest.reportsPaths="%WORKSPACE%\\test\\%COMPONENTNAME%.Test\\TestResults\\*.trx"^ 
+         ''' 
+				}
+			} //end steps
+		} //end parallel stage
+ 	 } //end parallel
+	}
 
-        }//end of stages
+     }//end of stages
 
     } //end of pipeline
