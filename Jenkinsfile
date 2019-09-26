@@ -246,11 +246,11 @@ pipeline {
 
                      }
                  }
-              }//end of Veracode stage  */
+              }//end of Veracode stage  
 	 stage('BAMS Push'){
-               /* when {
+               when {
                     anyOf { branch 'master'; branch 'release/*';  }
-               } */
+               } 
                 steps {
                         dir("${env.WORKSPACE}\\dist") {
                         script {
@@ -276,7 +276,20 @@ pipeline {
                         }
                     }
                 }
-            } 
+            }  */
+	 stage('BlackDuckScan') {
+               /* when {
+                    anyOf { branch 'master'; branch 'release/*'}
+                    expression { params.BLACKDUCK_BUILD }
+                } */    
+                steps {
+                   dir("${WORKSPACE}\\dist") {
+                   	powershell '''
+						powershell "[Net.ServicePointManager]::SecurityProtocol = 'tls12'; irm https://detect.synopsys.com/detect.ps1?$(Get-Random) | iex; detect" --blackduck.url=https://refinitiv.app.blackduck.com --blackduck.username=wealthtoolsbdservice --blackduck.api.token=$env:BLACK_DUCK_API_KEY --detect.project.name=WealthTools --detect.project.version.name=Nightly" "--detect.code.location.name=$env:PROJECT_NAME"
+					'''
+                   }
+                }
+ }
 
      }//end of stages
 
