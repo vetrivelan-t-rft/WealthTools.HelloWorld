@@ -21,6 +21,9 @@ pipeline {
 	COMPONENTNAME = "proposal_api"
             //The product type is used to group products together in directories as well as assist in deployments
         COMPONENTGROUP = "WM-ServiceBureau"
+	PROJECT_NAME = "WealthTools.WebAPI.Proposals"
+	BAMSURI = "https://bams-aws.refinitiv.com/artifactory/api/nuget/default.nuget.cloud/nawm/${COMPONENTGROUP}/${COMPONENTNAME}/"
+	BAMS_CREDS = credentials('s.tr.wmbot_BAMS_AWS_APIKEY')
         }
 
       /*  environment {
@@ -101,6 +104,13 @@ pipeline {
                 steps {
                     //Build all the projects
                    powershell 'dotnet build  -p:Version=$env:FULLVERSION -c Release'
+                }
+            }
+	   stage('Publish') {
+                steps {
+                    dir("${WORKSPACE}\\src\\${PROJECT_NAME}"){
+       			 powershell "dotnet publish -c Release  --no-build -p:Version=${FULLVERSION} -o ${WORKSPACE}\\\\dist"
+			}
                 }
             }
           /* stage('unit test') {
@@ -192,14 +202,14 @@ pipeline {
 			} //end steps
 		} //end parallel stage
  	 } //end parallel
-	} */
+	} 
 	stage('VeracodeScan') { 
-        /*	when {     
+        	when {     
 				anyOf { branch 'master'; branch 'release/*' }			  
 				expression {
                   params.FULL_BUILD
                 }	
-            } */
+            } 
 			
 			 steps {
                 script {  
@@ -235,7 +245,37 @@ pipeline {
 
                      }
                  }
-              }//end of stage 
+              }//end of Veracode stage  */
+	 stage('BAMS Push'){
+               /* when {
+                    anyOf { branch 'master'; branch 'release/*';  }
+               } */
+                steps {
+                        dir("${env.WORKSPACE}\\dist") {
+                        script {
+                            powershell '''
+                             try {
+        
+                                    $apiKey = "s.tr.wmbot:$env:BAMS_CREDS"
+                                    if($env:FULL_BUILD -eq "true") {
+                                    $nupkgName = "$env:COMPONENTNAME.$env:FULLVERSION.nupkg"
+                                    choco pack "$env:WORKSPACE\\build\\$env:COMPONENTNAME.nuspec" --version "$env:FULLVERSION"
+                                    } else {
+                                    $nupkgName = "$env:COMPONENTNAME.$env:FULLVERSION-snapshot.nupkg"
+                                    choco pack "$env:WORKSPACE\\build\\$env:COMPONENTNAME.nuspec" --version "$env:FULLVERSION-snapshot"
+                                    }
+                                    
+                                    choco push $nupkgName --Source $env:BAMSURI --ApiKey $apiKey
+                                }
+                                catch {
+                                    Write-Output "Publish failed : $PSItem"
+                                    exit 1
+                                }
+                        '''
+                        }
+                    }
+                }
+            } 
 
      }//end of stages
 
