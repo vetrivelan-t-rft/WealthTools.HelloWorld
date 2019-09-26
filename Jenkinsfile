@@ -103,13 +103,13 @@ pipeline {
                    powershell 'dotnet build  -p:Version=$env:FULLVERSION -c Release'
                 }
             }
-           stage('unit test') {
-              /*  when {
+          /* stage('unit test') {
+                when {
                     anyOf { branch 'develop'; branch 'master'}
                     expression {
                          HasTests == 'true'
                     }
-                }*/
+                }
                 steps {
                 script {
                 try {
@@ -192,7 +192,50 @@ pipeline {
 			} //end steps
 		} //end parallel stage
  	 } //end parallel
-	}
+	} */
+	stage('VeracodeScan') { 
+        /*	when {     
+				anyOf { branch 'master'; branch 'release/*' }			  
+				expression {
+                  params.FULL_BUILD
+                }	
+            } */
+			
+			 steps {
+                script {  
+                         //Dot net publish 
+                          powershell '''
+                        Add-Type -AssemblyName System.IO.Compression.FileSystem
+                        $zipName = "$env:COMPONENTNAME"
+                        $zipName = $zipName.replace(".","") + ".zip"
+                        $_source="$env:WORKSPACE\\Veracode"
+                        $inputFile ="$env:WORKSPACE\\build\\VeracodeScanFiles.txt"
+                        $_output="$env:WORKSPACE\\Veracode_Src"
+                        $_destination="$env:WORKSPACE\\$zipName"
+                        
+                        Write-Output "Creating a debug version for Veracode"
+                        dotnet.exe publish --output $_output
+                        New-Item -Force -ItemType directory -Path "$env:WORKSPACE\\Veracode"
+
+                        foreach($line in Get-Content $inputFile) {
+                        get-childitem  $_output -recurse | where { $_.Name -eq $line} | Select-Object -First 1 | % {
+                        Write-Host $_.FullName
+                        Copy-Item $_.FullName $_source
+                               } 
+                        }
+
+                        Write-Output "Create Zip file"
+                        if(Test-Path $_destination) {
+                            Write-Output "Deleting existing zip : $_destination"
+                            Remove-Item $_destination -Recurse
+                        }
+                        [System.IO.Compression.ZipFile]::CreateFromDirectory($_source, $_destination)
+
+                        '''
+
+                     }
+                 }
+              }//end of stage 
 
      }//end of stages
 
