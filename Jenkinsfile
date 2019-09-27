@@ -240,7 +240,7 @@ pipeline {
                     }
                 }
             }  
-	/* stage('BlackDuckScan') {
+	 stage('BlackDuckScan') {
                 when {
                     anyOf { branch 'master'; branch 'release/*'}
                     expression { params.BLACKDUCK_BUILD }
@@ -252,7 +252,7 @@ pipeline {
 					'''
                    }
                 }
- 		}*/ 
+ 		} 
 
      }//end of stages
 	post {
